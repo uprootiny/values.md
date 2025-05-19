@@ -1,0 +1,23 @@
+{
+  "coreValueWeights": {
+    "integrity": 0.25,
+    "autonomy": 0.20,
+    "fairness": 0.20,
+    "transparency": 0.15,
+    "wellbeing": 0.20
+  },
+  "principleEmphasis": [
+    "truthfulness",
+    "informed consent",
+    "distributive justice",
+    "harm prevention",
+    "explainability"
+  ],
+  "thresholds": {
+    "integrity": 0.6,
+    "autonomy": 0.5,
+    "fairness": 0.5,
+    "transparency": 0.5,
+    "wellbeing": 0.5
+  }
+}
