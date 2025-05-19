@@ -1,0 +1,33 @@
+{
+  "name": "values-md",
+  "version": "0.1.0",
+  "description": "A structured format for ethical hints to AI agents",
+  "main": "lib/values-md.js",
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c",
+    "minify": "terser lib/values-md.js -o lib/values-md.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uprootiny/values.md.git"
+  },
+  "keywords": [
+    "ethics",
+    "ai",
+    "values",
+    "decision-making",
+    "framework"
+  ],
+  "author": "uprootiny",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/uprootiny/values.md/issues"
+  },
+  "homepage": "https://github.com/uprootiny/values.md#readme",
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "rollup": "^3.25.0",
+    "terser": "^5.18.0"
+  }
+}
