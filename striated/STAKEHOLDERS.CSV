@@ -1,0 +1,26 @@
+stakeholder_id,name,category,subcategory,description,typical_interests,power_level,voice_level,vulnerability_level,representation_quality,ethical_priority_weight
+PRIMARY_USER,Primary User,direct,user,"The person directly interacting with the AI system","personal benefit;ease of use;privacy;autonomy",high,high,low,high,0.9
+AFFECTED_INDIVIDUAL,Affected Individual,direct,impacted,"Person affected by AI decision but not direct user","safety;fairness;dignity;non-harm",medium,low,high,low,0.95
+FAMILY_MEMBERS,Family Members,direct,related,"Family members of users or affected individuals","loved one's wellbeing;family stability;emotional support",medium,medium,medium,medium,0.8
+FUTURE_SELF,Future Self,temporal,user,"Future version of current user","long-term wellbeing;life trajectory;future autonomy",low,none,medium,none,0.7
+VULNERABLE_POPULATIONS,Vulnerable Populations,social,marginalized,"Groups with limited power or special needs","protection;representation;equal treatment;accommodation",low,very_low,very_high,very_low,0.95
+CHILDREN_MINORS,Children and Minors,social,age_based,"People under 18 affected by decisions","safety;development;future opportunities;protection",very_low,none,very_high,low,0.98
+ELDERLY_POPULATION,Elderly Population,social,age_based,"Older adults potentially affected","dignity;care;respect;inclusion",low,low,high,medium,0.85
+DISABLED_INDIVIDUALS,Disabled Individuals,social,ability_based,"People with disabilities","accessibility;inclusion;accommodation;dignity",low,low,high,low,0.9
+RACIAL_MINORITIES,Racial Minorities,social,race_based,"Racial and ethnic minority groups","equal treatment;representation;cultural respect;non-discrimination",low,low,high,low,0.9
+GENDER_MINORITIES,Gender Minorities,social,gender_based,"Women and gender minorities","equal opportunity;safety;representation;non-discrimination",low,low,medium,low,0.85
+ECONOMIC_DISADVANTAGED,Economically Disadvantaged,social,class_based,"Low-income individuals and communities","access;affordability;opportunity;basic needs",very_low,very_low,very_high,very_low,0.9
+HEALTHCARE_PATIENTS,Healthcare Patients,domain,healthcare,"Patients receiving medical care","quality care;safety;informed consent;dignity",low,low,very_high,medium,0.95
+STUDENTS,Students,domain,education,"Learners in educational systems","fair evaluation;opportunity;growth;support",low,low,medium,medium,0.8
+EMPLOYEES,Employees,domain,workplace,"Workers affected by workplace AI","job security;fair treatment;skill development;dignity",medium,medium,medium,high,0.8
+CUSTOMERS,Customers,domain,commercial,"Consumers of products or services","value;safety;privacy;fair pricing",high,high,low,high,0.75
+CITIZENS,Citizens,domain,public,"Members of democratic society","rights;representation;transparency;accountability",medium,high,low,high,0.9
+GLOBAL_COMMUNITY,Global Community,temporal,international,"International community and future generations","peace;sustainability;human rights;development",very_low,low,medium,low,0.8
+FUTURE_GENERATIONS,Future Generations,temporal,intergenerational,"People not yet born","environmental sustainability;opportunity;freedom;wellbeing",none,none,very_high,none,0.85
+PROFESSIONALS,Professional Community,institutional,professional,"Relevant professional groups (doctors, teachers, etc.)","professional standards;ethics;competence;reputation",high,high,low,high,0.7
+RESEARCHERS,Researchers,institutional,academic,"Researchers studying relevant domains","knowledge;truth;methodology;ethics",medium,medium,low,medium,0.6
+REGULATORS,Regulators,institutional,government,"Government agencies and oversight bodies","compliance;public interest;safety;fairness",very_high,high,low,high,0.8
+COMPANIES,Companies,institutional,commercial,"Business organizations involved","profit;reputation;compliance;sustainability",very_high,very_high,low,very_high,0.4
+INVESTORS,Investors,institutional,financial,"Financial stakeholders","return on investment;risk management;growth",high,high,low,high,0.3
+NGO_ADVOCATES,NGO Advocates,institutional,advocacy,"Non-profit advocacy organizations","cause advancement;rights protection;social change",medium,medium,low,medium,0.7
+TECHNOLOGY_DEVELOPERS,Technology Developers,institutional,technical,"Engineers and AI developers","innovation;functionality;feasibility;recognition",high,high,low,high,0.5
