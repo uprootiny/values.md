@@ -1,350 +1,2647 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VALUES.MD - Ethical Decision Framework</title>
-    <link rel="stylesheet" href="assets/css/tailwind.min.css">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <title>Values.md Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd8;
+            --primary-light: #8b9df7;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border: #e5e7eb;
+            --border-light: #f3f4f6;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+            --hotkey-bg: rgba(107, 114, 128, 0.1);
+            --hotkey-text: #6b7280;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 1rem;
+            min-height: calc(100vh - 2rem);
+        }
+
+        /* === HELP OVERLAY === */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        .help-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            margin: 1rem;
+        }
+
+        .help-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .help-close:hover {
+            background: var(--bg-primary);
+        }
+
+        .help-panel h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .help-panel h3 {
+            color: var(--text-primary);
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.1rem;
+        }
+
+        .help-panel ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .help-panel li {
+            margin-bottom: 0.5rem;
+        }
+
+        .help-panel kbd {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.125rem 0.375rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 0 0.125rem;
+        }
+
+        .help-panel code {
+            background: var(--bg-primary);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .help-panel pre {
+            background: var(--bg-primary);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+
+        .source-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .source-local { background: var(--success); }
+        .source-remote { background: var(--warning); }
+        .source-fallback { background: var(--error); }
+
+        /* === DEBUG PANEL === */
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.92);
+            color: #00ff41;
+            padding: 1rem;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+            order: 3;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-panel.collapsed {
+            max-height: 40px;
+            overflow: hidden;
+        }
+
+        .debug-toggle {
+            background: none;
+            border: none;
+            color: #00ff41;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .debug-toggle:hover {
+            color: #44ff77;
+        }
+
+        .debug-log-entry {
+            margin-bottom: 0.25rem;
+            opacity: 0.9;
+        }
+
+        .debug-log-entry.error {
+            color: #ff4444;
+        }
+
+        .debug-log-entry.warning {
+            color: #ffaa00;
+        }
+
+        .debug-log-entry.success {
+            color: #44ff88;
+        }
+
+        /* === MAIN PANEL === */
+        .main-panel {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            order: 2;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-bar {
+            background: var(--bg-primary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-source-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .help-button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .help-button:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .brand-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .brand-link:hover {
+            color: var(--primary-dark);
+        }
+
+        /* === CONTENT AREA === */
+        .content-area {
+            padding: 2.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .loading-state, .error-state, .game-state, .results-state {
+            display: none;
+            flex: 1;
+        }
+
+        .loading-state.active, .error-state.active, .game-state.active, .results-state.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === HEADER SECTIONS === */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* === CORS WARNING === */
+        .cors-warning {
+            background: linear-gradient(135deg, #fef3cd, #fde68a);
+            border: 1px solid #f6cc47;
+            color: #b45309;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .cors-warning strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #92400e;
+        }
+
+        .cors-warning code {
+            background: rgba(146, 64, 14, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 0.125rem;
+        }
+
+        /* === PROGRESS === */
+        .progress-container {
+            margin: 2rem 0;
+        }
+
+        .content-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .content-stats {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            background: var(--bg-primary);
+            height: 10px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            background: var(--gradient);
+            height: 100%;
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 6px;
+        }
+
+        /* === DILEMMA CARD === */
+        .dilemma-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .dilemma-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.25rem;
+            line-height: 1.3;
+        }
+
+        .dilemma-scenario {
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-bottom: 1.75rem;
+            font-size: 1.05rem;
+        }
+
+        .motif-container {
+            margin: 1.5rem 0;
+        }
+
+        .motif-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .motif-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .motif-tag {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .motif-tag:hover {
+            opacity: 1;
+        }
+
+        /* === CHOICES === */
+        .choices-container {
+            margin: 2.5rem 0;
+        }
+
+        .choice {
+            background: white;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .choice:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .choice.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, #f0f4ff, #e6f0ff);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .choice.keyboard-focus {
+            outline: 3px solid var(--info);
+            outline-offset: 2px;
+        }
+
+        .choice-number {
+            background: var(--text-secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+            transition: background 0.2s ease;
+        }
+
+        .choice.selected .choice-number {
+            background: var(--primary);
+        }
+
+        .choice-text {
+            flex: 1;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .choice-hotkey {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--hotkey-bg);
+            color: var(--hotkey-text);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .choice:hover .choice-hotkey {
+            opacity: 0.8;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            text-decoration: none;
+            min-height: 48px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-hotkey {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--hotkey-bg);
+            color: var(--hotkey-text);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.375rem;
+            border-radius: 6px;
+            opacity: 0.7;
+        }
+
+        /* === SMART CONTROLS === */
+        .smart-controls {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .generate-segment {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .generate-segment .btn {
+            border-radius: 0;
+            border: none;
+            margin: 0;
+            min-height: 50px;
+        }
+
+        .generate-segment .btn:first-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .progress-indicator {
+            background: var(--bg-primary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border: 1px solid var(--border);
+        }
+
+        /* === VALUES OUTPUT === */
+        .values-output {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 600px;
+            overflow-y: auto;
+            margin: 2rem 0;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .values-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .values-output::-webkit-scrollbar-track {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .values-output::-webkit-scrollbar-thumb {
+            background: #64748b;
+            border-radius: 4px;
+        }
+
+        /* === ERROR MESSAGE === */
+        .error-message {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .error-message strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b91c1c;
+        }
+
+        /* === PERFORMANCE METRICS === */
+        .performance-metrics {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            border: 1px solid var(--border);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* === FOOTER === */
+        .footer-links {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            order: 1;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            border: 1px solid var(--border);
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .app-container { 
+                padding: 0.5rem; 
+                gap: 0.75rem;
+            }
+            
+            .content-area { 
+                padding: 1.5rem; 
+            }
+            
+            .header h1 { 
+                font-size: 2.25rem; 
+            }
+            
+            .choice { 
+                padding: 1.25rem; 
+                gap: 0.75rem;
+            }
+            
+            .smart-controls { 
+                flex-direction: column; 
+                gap: 1rem;
+            }
+            
+            .generate-segment { 
+                flex-direction: column; 
+                width: 100%;
+            }
+            
+            .generate-segment .btn:first-child { 
+                border-right: none; 
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3); 
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-controls {
+                gap: 0.5rem;
+            }
+        }
+
+        /* === ACCESSIBILITY === */
+        @media (prefers-reduced-motion: reduce) {
+            * { 
+                transition-duration: 0.01ms !important; 
+                animation-duration: 0.01ms !important;
+            }
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--primary);
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+            font-weight: 600;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        /* === ANIMATIONS === */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .choice {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .choice:nth-child(1) { animation-delay: 0.1s; }
+        .choice:nth-child(2) { animation-delay: 0.2s; }
+        .choice:nth-child(3) { animation-delay: 0.3s; }
+        .choice:nth-child(4) { animation-delay: 0.4s; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-    <div id="app" class="min-h-screen flex flex-col">
-        <header class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <div class="flex-shrink-0 flex items-center">
-                            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">VALUES.MD</h1>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Help Overlay -->
+    <div class="help-overlay" id="help-overlay">
+        <div class="help-panel">
+            <button class="help-close" onclick="toggleHelp()" aria-label="Close help">&times;</button>
+            <h2>📚 Values.md Generator - User Guide</h2>
+            
+            <h3>🎮 Keyboard Controls</h3>
+            <ul>
+                <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> or <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> - Select choice directly</li>
+                <li><kbd>↑</kbd> <kbd>↓</kbd> - Navigate through choices</li>
+                <li><kbd>Enter</kbd> - Confirm focused choice and continue</li>
+                <li><kbd>Space</kbd> - Load/generate more content</li>
+                <li><kbd>?</kbd> - Toggle this help panel</li>
+                <li><kbd>D</kbd> - Toggle debug panel</li>
+                <li><kbd>R</kbd> - Restart assessment</li>
+            </ul>
+
+            <h3>🎯 Data Sources</h3>
+            <ul>
+                <li><span class="source-dot source-local"></span> <strong>Local:</strong> Files from your deployment (preferred)</li>
+                <li><span class="source-dot source-remote"></span> <strong>Remote:</strong> GitHub repository fallback</li>
+                <li><span class="source-dot source-fallback"></span> <strong>Fallback:</strong> Built-in scenarios (last resort)</li>
+            </ul>
+
+            <h3>🔧 CORS Resolution Guide</h3>
+            <p><strong>If you're getting CORS errors when loading local files:</strong></p>
+            
+            <h4>Option 1: Python HTTP Server</h4>
+            <pre><code># Python 3
+python3 -m http.server 8000
+
+# Python 2
+python -m SimpleHTTPServer 8000</code></pre>
+            <p>Then open: <code>http://localhost:8000/your-file.html</code></p>
+
+            <h4>Option 2: Node.js Serve</h4>
+            <pre><code># Install globally
+npm install -g serve
+
+# Serve current directory
+serve .
+
+# Or use npx (no install)
+npx serve .</code></pre>
+
+            <h4>Option 3: PHP Server</h4>
+            <pre><code>php -S localhost:8000</code></pre>
+
+            <h4>Option 4: Browser Flags (Development Only)</h4>
+            <p><strong>Chrome:</strong> Start with <code>--disable-web-security --user-data-dir="/tmp/chrome_dev"</code></p>
+            <p><strong>Firefox:</strong> Set <code>security.fileuri.strict_origin_policy</code> to <code>false</code> in <code>about:config</code></p>
+
+            <h3>🚀 Smart Controls</h3>
+            <ul>
+                <li><strong>📁 Load More:</strong> Available when more scenarios exist in your data files</li>
+                <li><strong>✨ Generate More:</strong> Uses LLM to create new scenarios (when configured)</li>
+                <li><strong>📊 Progress:</strong> Shows available content, not session length</li>
+            </ul>
+
+            <h3>🎨 About Values.md</h3>
+            <p>This tool generates personalized values profiles for LLM alignment. Your responses to ethical dilemmas create a structured values.md file that can be used to align AI systems with your moral reasoning patterns.</p>
+
+            <p><strong>Privacy:</strong> All processing happens locally in your browser. No data is sent to external servers.</p>
+        </div>
+    </div>
+    
+    <div class="app-container">
+        <!-- Footer Links -->
+        <div class="footer-links">
+            <a href="https://values.md" class="footer-link" target="_blank" rel="noopener">
+                🌐 values.md
+            </a>
+            <a href="https://github.com/uprootiny/values.md" class="footer-link" target="_blank" rel="noopener">
+                🔗 GitHub Repository
+            </a>
+            <a href="https://github.com/uprootiny/values.md/blob/main/bb.html" class="footer-link" target="_blank" rel="noopener">
+                🎮 Alternative Game Version
+            </a>
+            <a href="https://github.com/uprootiny/values.md/blob/main/docs/" class="footer-link" target="_blank" rel="noopener">
+                📄 Research & Documentation
+            </a>
+        </div>
+
+        <!-- Main Panel -->
+        <div class="main-panel">
+            <div class="header-bar">
+                <div class="data-source-indicator" id="data-source">
+                    <span class="source-dot" id="source-dot"></span>
+                    <span id="source-text">Loading data sources...</span>
+                </div>
+                <div class="header-controls">
+                    <a href="https://values.md" class="brand-link" target="_blank" rel="noopener">values.md</a>
+                    <button class="help-button" onclick="toggleHelp()" title="Help (?)" aria-label="Open help">?</button>
+                </div>
+            </div>
+
+            <div class="content-area" id="main-content" tabindex="-1">
+                <!-- Loading State -->
+                <div class="loading-state" id="loading-state">
+                    <div class="header">
+                        <h1>⚖️ Values.md Generator</h1>
+                        <p>Initializing ethical assessment system and prioritizing local data files...</p>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="loading-progress"></div>
                         </div>
-                        <nav class="ml-6 flex space-x-8">
-                            <a href="#about" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">About</a>
-                            <a href="#docs" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Docs</a>
-                            <a href="#examples" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Examples</a>
-                            <a href="#demos" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">Demos</a>
-                        </nav>
-                    </div>
-                    <div class="flex items-center">
-                        <a href="https://github.com/uprootiny/values.md" class="text-gray-400 hover:text-gray-500">
-                            <span class="sr-only">GitHub</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                            </svg>
-                        </a>
+                        <div class="content-stats" id="loading-text">🔍 Checking local deployment files...</div>
                     </div>
                 </div>
-            </div>
-        </header>
 
-        <main class="flex-grow">
-            <!-- Hero section -->
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
-                    <div class="text-center">
-                        <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">VALUES.MD</h1>
-                        <p class="mt-6 text-xl max-w-3xl mx-auto">A structured format for ethical frameworks that can be used by both humans and AI systems.</p>
-                        <div class="mt-10 flex justify-center">
-                            <a href="#docs" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-blue-700 bg-white hover:bg-gray-50">
-                                Get Started
-                            </a>
-                            <a href="https://github.com/uprootiny/values.md" class="ml-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 bg-opacity-30 hover:bg-opacity-40">
-                                GitHub
-                            </a>
+                <!-- Error State -->
+                <div class="error-state" id="error-state">
+                    <div class="header">
+                        <h1>⚠️ Data Loading Issue</h1>
+                        <p>Encountered problems loading ethical scenarios</p>
+                    </div>
+                    <div class="error-message" id="error-details"></div>
+                    <div class="controls">
+                        <button class="btn" onclick="initialize()">
+                            🔄 Retry Loading
+                            <span class="btn-hotkey">R</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="useFallbackData()">
+                            ⚡ Continue with Fallback
+                            <span class="btn-hotkey">F</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game State -->
+                <div class="game-state" id="game-state">
+                    <div class="header">
+                        <h1>🎯 Discover Your Values</h1>
+                        <p>Answer ethical dilemmas to generate your personal values.md for LLM alignment</p>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="content-progress">
+                            <div class="content-stats" id="progress-text">Question 1</div>
+                            <div class="content-stats" id="available-content">Available: --</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="game-progress"></div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- About section -->
-            <div id="about" class="py-12 bg-white">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:text-center">
-                        <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">About</h2>
-                        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                            What is VALUES.MD?
-                        </p>
-                        <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                            VALUES.MD is a standardized format for defining ethical frameworks with clear hierarchies and priorities.
-                        </p>
+                    <div class="dilemma-card">
+                        <h2 class="dilemma-title" id="dilemma-title">Loading ethical scenario...</h2>
+                        <div class="dilemma-scenario" id="dilemma-scenario">Please wait while we prepare your assessment...</div>
+                        
+                        <div class="motif-container" id="motif-container">
+                            <div class="motif-label">Ethical themes</div>
+                            <div class="motif-tags" id="motif-tags"></div>
+                        </div>
                     </div>
 
-                    <div class="mt-10">
-                        <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <dt class="text-lg leading-6 font-medium text-gray-900">
-                                        Structured Format
-                                    </dt>
-                                    <dd class="mt-2 text-base text-gray-500">
-                                        Transform abstract ethical principles into concrete decision frameworks with clear hierarchies.
-                                    </dd>
-                                </div>
-                            </div>
-
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <dt class="text-lg leading-6 font-medium text-gray-900">
-                                        Machine Readable
-                                    </dt>
-                                    <dd class="mt-2 text-base text-gray-500">
-                                        Easily parse and integrate ethical frameworks into software systems and AI.
-                                    </dd>
-                                </div>
-                            </div>
-
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <dt class="text-lg leading-6 font-medium text-gray-900">
-                                        Transparent Reasoning
-                                    </dt>
-                                    <dd class="mt-2 text-base text-gray-500">
-                                        Make ethical reasoning explicit, auditable, and communicable to stakeholders.
-                                    </dd>
-                                </div>
-                            </div>
-
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <div class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4">
-                                    <dt class="text-lg leading-6 font-medium text-gray-900">
-                                        Adaptable Framework
-                                    </dt>
-                                    <dd class="mt-2 text-base text-gray-500">
-                                        Balance consistency with flexibility through domain-specific frameworks.
-                                    </dd>
-                                </div>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Demo section -->
-            <div id="demo" class="py-12 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:text-center">
-                        <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Demo</h2>
-                        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                            Try VALUES.MD
-                        </p>
-                        <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                            Generate your own VALUES.MD file or explore interactive demos.
-                        </p>
+                    <div class="choices-container" id="choices-container">
+                        <!-- Choices populated dynamically -->
                     </div>
 
-                    <div class="mt-10 flex flex-col items-center">
-                        <div class="w-full max-w-4xl bg-white shadow overflow-hidden rounded-lg">
-                            <div class="px-4 py-5 sm:px-6 bg-gray-100">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">VALUES.MD Generator</h3>
-                                <p class="mt-1 text-sm text-gray-500">Create a custom VALUES.MD file with your values</p>
-                            </div>
-                            <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-                                <div id="demo-app">
-                                    <!-- Demo app will be loaded here -->
-                                    <p class="text-center text-gray-500">Loading demo...</p>
-                                </div>
-                            </div>
+                    <div class="smart-controls">
+                        <div class="progress-indicator" id="progress-indicator">
+                            📊 Scenario 1 of --
                         </div>
                         
-                        <div class="mt-8 text-center">
-                            <a href="demos/content-moderation/" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                                Try Content Moderation Demo
-                            </a>
-                            <a href="demos/decision-assistant/" class="ml-4 inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-base font-medium rounded-md text-gray-700 hover:bg-gray-50">
-                                Try Decision Assistant Demo
-                            </a>
+                        <div class="generate-segment" id="generate-segment">
+                            <button class="btn" id="load-more-btn" onclick="loadMore()" disabled>
+                                📁 Load More
+                                <span class="btn-hotkey">L</span>
+                            </button>
+                            <button class="btn" id="generate-more-btn" onclick="generateMore()" disabled>
+                                ✨ Generate More
+                                <span class="btn-hotkey">G</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Documentation section -->
-            <div id="docs" class="py-12 bg-white">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:text-center">
-                        <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Documentation</h2>
-                        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                            Get Started with VALUES.MD
-                        </p>
+                <!-- Results State -->
+                <div class="results-state" id="results-state">
+                    <div class="header">
+                        <h1>📋 Your Values Profile</h1>
+                        <p>Here's your personalized values.md file for LLM alignment</p>
                     </div>
 
-                    <div class="mt-10">
-                        <div class="bg-gray-50 p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Installation</h3>
-                            <div class="mt-2 bg-gray-800 rounded-md p-4 overflow-x-auto">
-                                <pre class="text-white text-sm">npm install values-md</pre>
+                    <div class="performance-metrics" id="performance-metrics">
+                        <div class="metric-grid">
+                            <div class="metric-item">
+                                <div class="metric-value" id="completion-time">--</div>
+                                <div class="metric-label">Completion Time</div>
                             </div>
-                            <p class="mt-4 text-sm text-gray-500">Or include it directly in your HTML:</p>
-                            <div class="mt-2 bg-gray-800 rounded-md p-4 overflow-x-auto">
-                                <pre class="text-white text-sm">&lt;script src="https://unpkg.com/values-md@1.0.0/lib/values-md.min.js"&gt;&lt;/script&gt;</pre>
+                            <div class="metric-item">
+                                <div class="metric-value" id="consistency-score">--</div>
+                                <div class="metric-label">Consistency Score</div>
                             </div>
-                        </div>
-
-                        <div class="mt-8 bg-gray-50 p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">Basic Usage</h3>
-                            <div class="mt-2 bg-gray-800 rounded-md p-4 overflow-x-auto">
-                                <pre class="text-white text-sm">// Parse a VALUES.MD file
-import { parseValuesMD } from 'values-md';
-
-const valuesMD = parseValuesMD(fs.readFileSync('values.md', 'utf8'));
-console.log(valuesMD.coreValues);
-
-// Evaluate a decision
-const ethicsSystem = new ValuesMDSystem(valuesMD);
-const evaluation = ethicsSystem.evaluateDecision(decision, context);</pre>
+                            <div class="metric-item">
+                                <div class="metric-value" id="scenarios-used">--</div>
+                                <div class="metric-label">Scenarios Answered</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value" id="values-identified">--</div>
+                                <div class="metric-label">Core Values</div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <a href="docs/specification.md" class="block hover:bg-gray-50 bg-gray-100 p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-900">Specification</h3>
-                                <p class="mt-2 text-sm text-gray-500">The complete VALUES.MD format specification</p>
-                            </a>
-                            <a href="docs/api.md" class="block hover:bg-gray-50 bg-gray-100 p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-900">API Documentation</h3>
-                                <p class="mt-2 text-sm text-gray-500">Complete reference for the VALUES.MD library</p>
-                            </a>
-                            <a href="docs/getting-started.md" class="block hover:bg-gray-50 bg-gray-100 p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-900">Getting Started</h3>
-                                <p class="mt-2 text-sm text-gray-500">Step-by-step guide for beginners</p>
-                            </a>
-                            <a href="docs/integration-guide.md" class="block hover:bg-gray-50 bg-gray-100 p-6 rounded-lg">
-                                <h3 class="text-lg font-medium text-gray-900">Integration Guide</h3>
-                                <p class="mt-2 text-sm text-gray-500">How to integrate VALUES.MD with your projects</p>
-                            </a>
-                        </div>
+                    <div class="values-output" id="values-output">🔄 Generating your personalized values.md file...</div>
+
+                    <div class="controls">
+                        <button class="btn" onclick="downloadValues()">
+                            📄 Download values.md
+                            <span class="btn-hotkey">D</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyValues()">
+                            📋 Copy to Clipboard
+                            <span class="btn-hotkey">C</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="restart()">
+                            🔄 Start Over
+                            <span class="btn-hotkey">R</span>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Examples section -->
-            <div id="examples" class="py-12 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="lg:text-center">
-                        <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Examples</h2>
-                        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                            VALUES.MD in Action
-                        </p>
-                    </div>
-
-                    <div class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        <div class="bg-white overflow-hidden shadow rounded-lg">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">Content Moderation</h3>
-                                <p class="mt-2 text-sm text-gray-500">A VALUES.MD framework for content moderation systems</p>
-                                <div class="mt-4">
-                                    <a href="examples/ai-systems/content-moderation.md" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                                        View Example →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white overflow-hidden shadow rounded-lg">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">Tech Company Ethics</h3>
-                                <p class="mt-2 text-sm text-gray-500">An organizational VALUES.MD for technology companies</p>
-                                <div class="mt-4">
-                                    <a href="examples/organization/tech-company.md" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                                        View Example →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white overflow-hidden shadow rounded-lg">
-                            <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">Personal Ethics</h3>
-                                <p class="mt-2 text-sm text-gray-500">A personal VALUES.MD for individual decision-making</p>
-                                <div class="mt-4">
-                                    <a href="examples/personal/personal.md" class="text-sm font-medium text-blue-600 hover:text-blue-500">
-                                        View Example →
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 text-center">
-                        <a href="templates/" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-                            Browse Templates
-                        </a>
-                    </div>
-                </div>
+        <!-- Debug Panel -->
+        <div class="debug-panel collapsed" id="debug-panel">
+            <button class="debug-toggle" onclick="toggleDebug()">
+                <span id="debug-arrow">▶</span> Debug Console (press D to toggle)
+            </button>
+            <div id="debug-log">
+                <div class="debug-log-entry">$ values.md generator v3.0 - enhanced MVP with comprehensive data loading</div>
             </div>
-
-            <!-- CTA section -->
-            <div class="bg-blue-600">
-                <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-                    <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                        <span class="block">Ready to get started?</span>
-                        <span class="block text-blue-200">Create your own VALUES.MD today.</span>
-                    </h2>
-                    <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-                        <div class="inline-flex rounded-md shadow">
-                            <a href="docs/getting-started.md" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50">
-                                Get Started
-                            </a>
-                        </div>
-                        <div class="ml-3 inline-flex rounded-md shadow">
-                            <a href="https://github.com/uprootiny/values.md" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700">
-                                GitHub
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <footer class="bg-white">
-            <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div class="md:flex md:items-center md:justify-between">
-                    <div class="flex justify-center md:order-2">
-                        <a href="https://github.com/uprootiny/values.md" class="text-gray-400 hover:text-gray-500">
-                            <span class="sr-only">GitHub</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                            </svg>
-                        </a>
-                    </div>
-                    <div class="mt-8 md:mt-0 md:order-1">
-                        <p class="text-center text-base text-gray-400">
-                            &copy; 2023 VALUES.MD. All rights reserved.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        </div>
     </div>
 
-    <script src="lib/values-md.min.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/demo.js"></script>
+    <script>
+        // === ENHANCED DATA LOADING SYSTEM ===
+
+        class DataManager {
+            constructor(logger) {
+                this.logger = logger;
+                this.dataSource = 'unknown';
+                this.availableContent = {
+                    motifs: 0,
+                    dilemmas: 0,
+                    frameworks: 0
+                };
+                this.loadedContent = {
+                    motifs: [],
+                    dilemmas: [],
+                    frameworks: []
+                };
+                this.usedDilemmas = new Set();
+            }
+
+            async loadAllData() {
+                this.logger.log('=== ENHANCED DATA LOADING SYSTEM v3.0 ===', 'info');
+                
+                // Step 1: Try local files first (production deployment)
+                const localResult = await this.tryLocalData();
+                if (localResult.success) {
+                    this.dataSource = 'local';
+                    this.updateDataSourceIndicator('local', '📁 Local deployment files');
+                    return localResult.data;
+                }
+
+                // Step 2: Try GitHub raw URLs
+                const remoteResult = await this.tryRemoteData();
+                if (remoteResult.success) {
+                    this.dataSource = 'remote';
+                    this.updateDataSourceIndicator('remote', '🌐 GitHub repository');
+                    return remoteResult.data;
+                }
+
+                // Step 3: Use enhanced fallback data
+                this.logger.log('📦 Loading enhanced fallback scenarios', 'warning');
+                this.dataSource = 'fallback';
+                this.updateDataSourceIndicator('fallback', '⚡ Built-in scenarios');
+                return this.getFallbackData();
+            }
+
+            async tryLocalData() {
+                this.logger.log('🔍 Attempting local file discovery...', 'info');
+                
+                const localPaths = [
+                    { type: 'motifs', paths: ['./striated/motifs.csv', './motifs.csv', './data/motifs.csv'] },
+                    { type: 'dilemmas', paths: ['./striated/dilemmas.csv', './dilemmas.csv', './data/dilemmas.csv'] },
+                    { type: 'frameworks', paths: ['./striated/frameworks.csv', './frameworks.csv', './data/frameworks.csv'] }
+                ];
+
+                try {
+                    const results = {};
+                    let successCount = 0;
+
+                    for (const { type, paths } of localPaths) {
+                        let loaded = false;
+                        
+                        for (const path of paths) {
+                            try {
+                                this.logger.log(`📁 Trying local path: ${path}`, 'debug');
+                                const response = await fetch(path);
+                                
+                                if (!response.ok) {
+                                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                }
+
+                                const csvText = await response.text();
+                                
+                                // Enhanced validation
+                                if (!csvText.trim() || csvText.length < 50) {
+                                    throw new Error('File too short or empty');
+                                }
+
+                                const data = this.parseCSV(csvText, type);
+                                
+                                if (data.length > 0) {
+                                    results[type] = data;
+                                    this.availableContent[type] = data.length;
+                                    successCount++;
+                                    this.logger.log(`✅ Local ${type}: ${data.length} items from ${path}`, 'success');
+                                    loaded = true;
+                                    break;
+                                }
+                            } catch (error) {
+                                this.logger.log(`❌ Local ${path} failed: ${error.message}`, 'debug');
+                                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                                    this.suggestCORSFix(path);
+                                }
+                            }
+                        }
+                        
+                        if (!loaded) {
+                            this.logger.log(`⚠️ No local ${type} files found`, 'warning');
+                        }
+                    }
+
+                    // Enhanced success criteria: need at least motifs and dilemmas
+                    if (successCount >= 2 && results.motifs && results.dilemmas) {
+                        this.loadedContent = { ...results, frameworks: results.frameworks || [] };
+                        this.logger.log(`🎉 Local loading successful: ${successCount}/3 files`, 'success');
+                        return { success: true, data: this.loadedContent };
+                    }
+
+                    this.logger.log(`❌ Insufficient local data: ${successCount}/3 files`, 'warning');
+                    return { success: false };
+
+                } catch (error) {
+                    this.logger.log(`💥 Local loading system error: ${error.message}`, 'error');
+                    return { success: false };
+                }
+            }
+
+            async tryRemoteData() {
+                this.logger.log('🌐 Attempting GitHub repository loading...', 'info');
+                
+                const remotePaths = {
+                    motifs: 'https://raw.githubusercontent.com/uprootiny/values.md/refs/heads/main/striated/motifs.csv',
+                    dilemmas: 'https://raw.githubusercontent.com/uprootiny/values.md/refs/heads/main/striated/dilemmas.csv',
+                    frameworks: 'https://raw.githubusercontent.com/uprootiny/values.md/refs/heads/main/striated/frameworks.csv'
+                };
+
+                try {
+                    const results = {};
+                    let successCount = 0;
+
+                    for (const [type, url] of Object.entries(remotePaths)) {
+                        try {
+                            this.logger.log(`🌍 Fetching remote: ${type}`, 'debug');
+                            const response = await fetch(url, {
+                                cache: 'no-cache',
+                                mode: 'cors'
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+
+                            const csvText = await response.text();
+                            
+                            // Enhanced validation
+                            if (!csvText.trim() || csvText.length < 50) {
+                                throw new Error('Empty or invalid response');
+                            }
+
+                            // Check for GitHub error pages
+                            if (csvText.includes('404: Not Found') || csvText.includes('<html')) {
+                                throw new Error('GitHub file not found or HTML response');
+                            }
+
+                            const data = this.parseCSV(csvText, type);
+                            
+                            if (data.length > 0) {
+                                results[type] = data;
+                                this.availableContent[type] = data.length;
+                                successCount++;
+                                this.logger.log(`✅ Remote ${type}: ${data.length} items`, 'success');
+                            } else {
+                                throw new Error('No valid data after parsing');
+                            }
+                        } catch (error) {
+                            this.logger.log(`❌ Remote ${type} failed: ${error.message}`, 'warning');
+                        }
+                    }
+
+                    if (successCount >= 2 && results.motifs && results.dilemmas) {
+                        this.loadedContent = { ...results, frameworks: results.frameworks || [] };
+                        this.logger.log(`🎉 Remote loading successful: ${successCount}/3 files`, 'success');
+                        return { success: true, data: this.loadedContent };
+                    }
+
+                    this.logger.log(`❌ Insufficient remote data: ${successCount}/3 files`, 'warning');
+                    return { success: false };
+
+                } catch (error) {
+                    this.logger.log(`💥 Remote loading system error: ${error.message}`, 'error');
+                    return { success: false };
+                }
+            }
+
+            suggestCORSFix(path = '') {
+                if (!document.querySelector('.cors-warning')) {
+                    const warning = document.createElement('div');
+                    warning.className = 'cors-warning';
+                    warning.innerHTML = `
+                        <strong>🔒 CORS Issue Detected</strong>
+                        Browsers block local file access for security. To serve files locally:<br><br>
+                        <strong>Python HTTP Server:</strong><br>
+                        <code>python3 -m http.server 8000</code><br>
+                        <code>python -m SimpleHTTPServer 8000</code><br><br>
+                        <strong>Node.js Serve:</strong><br>
+                        <code>npx serve .</code> or <code>npm install -g serve && serve .</code><br><br>
+                        <strong>PHP Server:</strong><br>
+                        <code>php -S localhost:8000</code><br><br>
+                        Then open: <code>http://localhost:8000/${path || 'your-file.html'}</code>
+                    `;
+                    
+                    const errorState = document.getElementById('error-details');
+                    if (errorState) {
+                        errorState.appendChild(warning);
+                    }
+                }
+            }
+
+            parseCSV(csvText, type) {
+                try {
+                    const parsed = Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        transformHeader: (header) => header.trim().toLowerCase().replace(/[^a-z0-9]/g, '_')
+                    });
+
+                    if (parsed.errors.length > 0) {
+                        this.logger.log(`⚠️ CSV parsing warnings for ${type}: ${parsed.errors.length} errors`, 'warning');
+                        parsed.errors.forEach(error => {
+                            this.logger.log(`  → ${error.message}`, 'debug');
+                        });
+                    }
+
+                    // Enhanced data validation
+                    const validData = parsed.data.filter(row => {
+                        // Normalize ID field names
+                        if (!row.id) {
+                            row.id = row.motif_id || row.dilemma_id || row.framework_id || row.id;
+                        }
+
+                        // Type-specific validation
+                        switch (type) {
+                            case 'dilemmas':
+                                return row.id && row.title && row.scenario && 
+                                       (row.choice_a || row.choice_1) && (row.choice_b || row.choice_2);
+                            
+                            case 'motifs':
+                                return row.id && (row.name || row.motif_name) && row.description;
+                            
+                            case 'frameworks':
+                                return row.id && row.name && (row.description || row.key_principle);
+                            
+                            default:
+                                return row.id && Object.values(row).some(v => 
+                                    v && v.toString().trim().length > 3
+                                );
+                        }
+                    });
+
+                    this.logger.log(`📊 Parsed ${validData.length}/${parsed.data.length} valid ${type} records`, 'debug');
+                    return validData;
+
+                } catch (error) {
+                    this.logger.log(`💥 CSV parsing error for ${type}: ${error.message}`, 'error');
+                    return [];
+                }
+            }
+
+            getFallbackData() {
+                this.logger.log('📦 Loading enhanced built-in fallback scenarios', 'info');
+                
+                const fallbackData = {
+                    motifs: [
+                        {id: 'UTIL_CALC', name: 'Utilitarian Calculation', description: 'Mathematical approach to maximizing overall utility and welfare'},
+                        {id: 'DEONT_DUTY', name: 'Deontological Duty', description: 'Adherence to moral rules and categorical imperatives'},
+                        {id: 'VIRT_CHAR', name: 'Virtue Character', description: 'Focus on moral character, virtues, and excellence'},
+                        {id: 'CARE_REL', name: 'Care Relationships', description: 'Emphasis on caring relationships and contextual responsibility'},
+                        {id: 'JUST_FAIR', name: 'Justice Fairness', description: 'Concern for fairness, equality, and just distribution'},
+                        {id: 'RESP_ACC', name: 'Responsibility Accountability', description: 'Taking responsibility for actions and consequences'},
+                        {id: 'FREE_AUT', name: 'Freedom Autonomy', description: 'Valuing individual liberty and self-determination'},
+                        {id: 'COMM_SOL', name: 'Community Solidarity', description: 'Emphasis on collective bonds and shared values'},
+                        {id: 'WELL_FLOUR', name: 'Wellbeing Flourishing', description: 'Focus on human welfare and flourishing'},
+                        {id: 'AUTH_INT', name: 'Authenticity Integrity', description: 'Being true to oneself and maintaining integrity'},
+                        {id: 'HARM_MIN', name: 'Harm Minimization', description: 'Primary focus on reducing harm and preventing suffering'},
+                        {id: 'EXPERT_DEF', name: 'Expert Deference', description: 'Relying on expert knowledge and professional judgment'}
+                    ],
+
+                    dilemmas: [
+                        {
+                            id: 'TROLL_CLASSIC',
+                            title: 'The Classic Trolley Problem',
+                            scenario: 'A runaway trolley is speeding toward five railway workers who cannot escape. You can pull a lever to divert the trolley to a side track, where it will kill one worker instead of five. The workers are unaware of the danger and cannot be warned in time.',
+                            choice_a: 'Pull the lever to save five lives by sacrificing one',
+                            choice_a_motif: 'UTIL_CALC',
+                            choice_b: 'Do nothing and let the trolley continue its current path',
+                            choice_b_motif: 'DEONT_DUTY',
+                            choice_c: 'Try to find another solution, even if it might fail',
+                            choice_c_motif: 'VIRT_CHAR',
+                            choice_d: 'Accept that you cannot make such decisions for others',
+                            choice_d_motif: 'FREE_AUT',
+                            target_motifs: 'UTIL_CALC,DEONT_DUTY,RESP_ACC',
+                            metadata: {difficulty: 'medium', context: 'classic'}
+                        },
+                        {
+                            id: 'AI_BIAS_HIRING',
+                            title: 'AI Hiring System Bias',
+                            scenario: 'Your company uses an AI hiring system that significantly improves efficiency and identifies qualified candidates. However, you discover it shows measurable bias against women and ethnic minorities. Disabling it would slow hiring by 60% during a critical growth period.',
+                            choice_a: 'Keep the AI system and implement human oversight to mitigate bias',
+                            choice_a_motif: 'UTIL_CALC',
+                            choice_b: 'Immediately disable the system to prevent discriminatory practices',
+                            choice_b_motif: 'JUST_FAIR',
+                            choice_c: 'Gradually phase it out while training a bias-free replacement',
+                            choice_c_motif: 'RESP_ACC',
+                            choice_d: 'Use it only for initial screening with human final decisions',
+                            choice_d_motif: 'EXPERT_DEF',
+                            target_motifs: 'JUST_FAIR,UTIL_CALC,RESP_ACC',
+                            metadata: {difficulty: 'high', context: 'technology'}
+                        },
+                        {
+                            id: 'CLIMATE_JOBS',
+                            title: 'Climate Action vs Economic Impact',
+                            scenario: 'Your city can implement strict carbon emission regulations that climate scientists say are necessary to meet critical environmental targets. However, these regulations would force several major employers to relocate, eliminating 3,000 jobs in communities that are already economically struggling.',
+                            choice_a: 'Implement the regulations immediately to address the climate crisis',
+                            choice_a_motif: 'RESP_ACC',
+                            choice_b: 'Reject the regulations to protect local employment and communities',
+                            choice_b_motif: 'CARE_REL',
+                            choice_c: 'Implement phased regulations with job retraining and transition support',
+                            choice_c_motif: 'COMM_SOL',
+                            choice_d: 'Seek federal funding to support both environmental and economic goals',
+                            choice_d_motif: 'UTIL_CALC',
+                            target_motifs: 'RESP_ACC,COMM_SOL,UTIL_CALC',
+                            metadata: {difficulty: 'high', context: 'environmental'}
+                        },
+                        {
+                            id: 'MEDICAL_TRIAGE',
+                            title: 'Medical Resource Allocation',
+                            scenario: 'Your hospital has one remaining ventilator during a critical shortage. Two patients need it equally from a medical standpoint: a 30-year-old parent of three young children with a history of substance abuse but now in recovery, and a 70-year-old retired doctor who has saved hundreds of lives.',
+                            choice_a: 'Give it to the younger patient based on life expectancy',
+                            choice_a_motif: 'UTIL_CALC',
+                            choice_b: 'Give it to the doctor based on their contributions to society',
+                            choice_b_motif: 'VIRT_CHAR',
+                            choice_c: 'Use a random selection process to remove personal bias',
+                            choice_c_motif: 'JUST_FAIR',
+                            choice_d: 'Consult with an ethics committee for collective decision',
+                            choice_d_motif: 'EXPERT_DEF',
+                            target_motifs: 'JUST_FAIR,UTIL_CALC,VIRT_CHAR',
+                            metadata: {difficulty: 'high', context: 'medical'}
+                        },
+                        {
+                            id: 'AUTONOMOUS_VEHICLE',
+                            title: 'Autonomous Vehicle Programming',
+                            scenario: 'You are programming the ethical decision-making system for autonomous vehicles. In unavoidable accident scenarios, the car must decide between different harmful outcomes: hit a single elderly person or swerve into a group of three children.',
+                            choice_a: 'Minimize total casualties regardless of other factors',
+                            choice_a_motif: 'UTIL_CALC',
+                            choice_b: 'Always prioritize the passenger who purchased the vehicle',
+                            choice_b_motif: 'CARE_REL',
+                            choice_c: 'Consider age, number of people, and probability of survival',
+                            choice_c_motif: 'VIRT_CHAR',
+                            choice_d: 'Use random selection to avoid making value judgments',
+                            choice_d_motif: 'JUST_FAIR',
+                            target_motifs: 'UTIL_CALC,DEONT_DUTY,JUST_FAIR',
+                            metadata: {difficulty: 'high', context: 'technology'}
+                        },
+                        {
+                            id: 'PRIVACY_SECURITY',
+                            title: 'Mass Surveillance for Public Safety',
+                            scenario: 'After a series of terrorist attacks, your government proposes comprehensive digital surveillance. Intelligence agencies estimate this could prevent 90% of planned attacks but would effectively eliminate digital privacy for all citizens.',
+                            choice_a: 'Support the surveillance program for maximum public safety',
+                            choice_a_motif: 'UTIL_CALC',
+                            choice_b: 'Oppose it completely to protect civil liberties and privacy',
+                            choice_b_motif: 'FREE_AUT',
+                            choice_c: 'Support limited, targeted surveillance with judicial oversight',
+                            choice_c_motif: 'JUST_FAIR',
+                            choice_d: 'Implement it temporarily with sunset clauses and review',
+                            choice_d_motif: 'RESP_ACC',
+                            target_motifs: 'FREE_AUT,RESP_ACC,UTIL_CALC',
+                            metadata: {difficulty: 'high', context: 'political'}
+                        },
+                        {
+                            id: 'PHARMA_WHISTLE',
+                            title: 'Pharmaceutical Whistleblowing',
+                            scenario: 'You discover that your pharmaceutical company has been withholding data about serious side effects of a popular medication. Thousands of people take this drug daily, and the concealed side effects could be life-threatening. Reporting this could save lives but would likely result in massive lawsuits destroying the company.',
+                            choice_a: 'Immediately report the safety data to regulatory authorities',
+                            choice_a_motif: 'RESP_ACC',
+                            choice_b: 'Try to address the issue through internal company channels first',
+                            choice_b_motif: 'EXPERT_DEF',
+                            choice_c: 'Anonymously leak the information to medical researchers',
+                            choice_c_motif: 'HARM_MIN',
+                            choice_d: 'Consult with ethics committees and legal experts before acting',
+                            choice_d_motif: 'VIRT_CHAR',
+                            target_motifs: 'RESP_ACC,DEONT_DUTY,WELL_FLOUR',
+                            metadata: {difficulty: 'high', context: 'professional'}
+                        },
+                        {
+                            id: 'INHERITANCE_FAMILY',
+                            title: 'Family Inheritance Dilemma',
+                            scenario: 'Your wealthy uncle has died and left you a substantial inheritance with one condition: you must use it to support your gambling-addicted cousin who has repeatedly stolen from family members and refuses treatment. Your uncle believed family loyalty was paramount.',
+                            choice_a: 'Honor your uncle\'s wishes and support your cousin unconditionally',
+                            choice_a_motif: 'CARE_REL',
+                            choice_b: 'Refuse the inheritance rather than enable destructive behavior',
+                            choice_b_motif: 'RESP_ACC',
+                            choice_c: 'Accept but structure support to encourage treatment',
+                            choice_c_motif: 'VIRT_CHAR',
+                            choice_d: 'Challenge the will legally while offering alternative support',
+                            choice_d_motif: 'JUST_FAIR',
+                            target_motifs: 'CARE_REL,RESP_ACC,AUTH_INT',
+                            metadata: {difficulty: 'medium', context: 'personal'}
+                        }
+                    ],
+
+                    frameworks: [
+                        {id: 'UTIL', name: 'Utilitarianism', description: 'Maximizes overall well-being and utility'},
+                        {id: 'DEONT', name: 'Deontological Ethics', description: 'Focuses on moral duties and rules'},
+                        {id: 'VIRTUE', name: 'Virtue Ethics', description: 'Emphasizes moral character and virtues'},
+                        {id: 'CARE', name: 'Care Ethics', description: 'Values relationships and contextual care'},
+                        {id: 'JUSTICE', name: 'Justice Theory', description: 'Focuses on fairness and equal treatment'},
+                        {id: 'PRAGMATIC', name: 'Pragmatic Ethics', description: 'Emphasizes practical consequences and workable solutions'}
+                    ]
+                };
+
+                this.loadedContent = fallbackData;
+                this.availableContent = {
+                    motifs: fallbackData.motifs.length,
+                    dilemmas: fallbackData.dilemmas.length,
+                    frameworks: fallbackData.frameworks.length
+                };
+
+                this.logger.log(`📦 Fallback data loaded: ${this.availableContent.dilemmas} scenarios, ${this.availableContent.motifs} motifs`, 'success');
+                return fallbackData;
+            }
+
+            updateDataSourceIndicator(source, description) {
+                const dot = document.getElementById('source-dot');
+                const text = document.getElementById('source-text');
+                
+                if (dot && text) {
+                    dot.className = `source-dot source-${source}`;
+                    text.textContent = description;
+                }
+            }
+
+            getAvailableDilemmas() {
+                return this.loadedContent.dilemmas.filter(d => !this.usedDilemmas.has(d.id));
+            }
+
+            markDilemmaUsed(dilemmaId) {
+                this.usedDilemmas.add(dilemmaId);
+            }
+
+            getRandomUnusedDilemma() {
+                const available = this.getAvailableDilemmas();
+                if (available.length === 0) return null;
+                
+                const randomIndex = Math.floor(Math.random() * available.length);
+                return available[randomIndex];
+            }
+
+            hasMoreDilemmas() {
+                return this.getAvailableDilemmas().length > 0;
+            }
+
+            getContentStats() {
+                const available = this.getAvailableDilemmas().length;
+                const total = this.availableContent.dilemmas;
+                const used = this.usedDilemmas.size;
+                
+                return { available, total, used };
+            }
+        }
+
+        // === ENHANCED LOGGER ===
+
+        class Logger {
+            constructor() {
+                this.logElement = document.getElementById('debug-log');
+                this.logs = [];
+                this.startTime = performance.now();
+                this.maxLogs = 100; // Limit log history
+            }
+
+            log(message, level = 'info', data = null) {
+                const timestamp = this.formatTime(performance.now() - this.startTime);
+                const logEntry = { 
+                    timestamp, 
+                    level, 
+                    message, 
+                    data, 
+                    time: new Date().toISOString() 
+                };
+
+                this.logs.push(logEntry);
+                
+                // Limit log history to prevent memory issues
+                if (this.logs.length > this.maxLogs) {
+                    this.logs = this.logs.slice(-this.maxLogs);
+                }
+
+                this.displayLog(logEntry);
+                
+                // Console logging for debugging
+                const consoleMethod = level === 'error' ? 'error' : level === 'warning' ? 'warn' : 'log';
+                console[consoleMethod](`[${timestamp}] ${message}`, data || '');
+            }
+
+            formatTime(ms) {
+                return `${(ms / 1000).toFixed(3)}s`;
+            }
+
+            displayLog(entry) {
+                if (!this.logElement) return;
+
+                const colors = {
+                    info: '#00ff41',
+                    success: '#44ff88',
+                    warning: '#ffaa00',
+                    error: '#ff4444',
+                    debug: '#888888'
+                };
+
+                const line = document.createElement('div');
+                line.className = `debug-log-entry ${entry.level}`;
+                line.style.color = colors[entry.level] || colors.info;
+                line.innerHTML = `[${entry.timestamp}] ${entry.message}`;
+                
+                this.logElement.appendChild(line);
+                this.logElement.scrollTop = this.logElement.scrollHeight;
+
+                // Limit displayed logs to prevent DOM bloat
+                while (this.logElement.children.length > 50) {
+                    this.logElement.removeChild(this.logElement.firstChild);
+                }
+            }
+
+            exportLogs() {
+                return {
+                    session: new Date().toISOString(),
+                    logs: this.logs,
+                    summary: {
+                        total: this.logs.length,
+                        errors: this.logs.filter(l => l.level === 'error').length,
+                        warnings: this.logs.filter(l => l.level === 'warning').length
+                    }
+                };
+            }
+        }
+
+        // === ENHANCED GAME STATE ===
+
+        class GameState {
+            constructor(logger) {
+                this.logger = logger;
+                this.reset();
+            }
+
+            reset() {
+                this.currentQuestion = 0;
+                this.responses = [];
+                this.motifScores = {};
+                this.frameworkScores = {};
+                this.startTime = new Date();
+                this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                this.keyboardFocusIndex = -1;
+                this.currentChoices = [];
+                this.llmConfigured = false; // TODO: Check for API keys when LLM integration added
+                this.consistencyHistory = [];
+                
+                this.logger.log(`🎮 Game state reset - Session: ${this.sessionId}`, 'info');
+            }
+
+            recordResponse(response) {
+                this.responses.push({
+                    ...response,
+                    timestamp: new Date(),
+                    questionNumber: this.currentQuestion + 1,
+                    timeSpent: Date.now() - this.questionStartTime,
+                    sessionTime: Date.now() - this.startTime.getTime()
+                });
+
+                // Update motif scores
+                if (response.motifs) {
+                    response.motifs.forEach(motif => {
+                        this.motifScores[motif] = (this.motifScores[motif] || 0) + 1;
+                    });
+                }
+
+                // Track consistency
+                this.updateConsistencyHistory();
+
+                this.currentQuestion++;
+                this.logger.log(`📝 Response recorded: "${response.choiceText.substring(0, 40)}..." (${response.motifs?.join(', ') || 'no motifs'})`, 'success');
+            }
+
+            updateConsistencyHistory() {
+                if (this.responses.length >= 2) {
+                    const recent = this.responses.slice(-3); // Look at last 3 responses
+                    const motifs = recent.flatMap(r => r.motifs || []);
+                    const uniqueMotifs = new Set(motifs);
+                    const consistency = motifs.length > 0 ? (motifs.length - uniqueMotifs.size + 1) / motifs.length : 1;
+                    this.consistencyHistory.push(consistency);
+                }
+            }
+
+            getTopMotifs(count = 5) {
+                return Object.entries(this.motifScores)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, count)
+                    .map(([motif, score]) => ({
+                        motif,
+                        score,
+                        percentage: Math.round((score / this.responses.length) * 100)
+                    }));
+            }
+
+            getMetrics() {
+                const duration = (new Date() - this.startTime) / 1000 / 60;
+                return {
+                    duration: Math.round(duration * 10) / 10,
+                    totalResponses: this.responses.length,
+                    consistency: this.calculateConsistency(),
+                    topValues: this.getTopMotifs(3).length
+                };
+            }
+
+            calculateConsistency() {
+                if (this.responses.length < 2) return 100;
+                
+                // Enhanced consistency calculation
+                const recentConsistency = this.consistencyHistory.length > 0 
+                    ? this.consistencyHistory.slice(-5).reduce((a, b) => a + b, 0) / Math.min(this.consistencyHistory.length, 5)
+                    : 1;
+
+                const scores = Object.values(this.motifScores);
+                if (scores.length === 0) return 100;
+                
+                const max = Math.max(...scores);
+                const min = Math.min(...scores);
+                const spread = max > 0 ? (max - min) / max : 0;
+                const spreadConsistency = 1 - spread;
+                
+                // Combine recent pattern consistency with overall spread consistency
+                const combined = (recentConsistency * 0.6) + (spreadConsistency * 0.4);
+                return Math.max(Math.round(combined * 100), 0);
+            }
+        }
+
+        // === ENHANCED KEYBOARD CONTROLLER ===
+
+        class KeyboardController {
+            constructor(gameState, logger) {
+                this.gameState = gameState;
+                this.logger = logger;
+                this.setupEventListeners();
+                this.keyMapping = {
+                    'a': 0, 's': 1, 'd': 2, 'f': 3,
+                    '1': 0, '2': 1, '3': 2, '4': 3
+                };
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                this.logger.log('⌨️ Enhanced keyboard controls initialized (A S D F + 1 2 3 4)', 'info');
+            }
+
+            handleKeyDown(event) {
+                const { key } = event;
+                const lowerKey = key.toLowerCase();
+                
+                // Skip if user is typing in input fields
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+
+                // Global keyboard shortcuts
+                switch (lowerKey) {
+                    case '?':
+                        toggleHelp();
+                        event.preventDefault();
+                        break;
+                    case 'd':
+                        if (!event.ctrlKey && !event.metaKey) {
+                            toggleDebug();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'r':
+                        if (!event.ctrlKey && !event.metaKey) {
+                            if (confirm('🔄 Restart the values assessment?')) restart();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'f':
+                        if (document.getElementById('error-state').classList.contains('active')) {
+                            useFallbackData();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'l':
+                        if (!document.getElementById('load-more-btn').disabled) {
+                            loadMore();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'g':
+                        if (!document.getElementById('generate-more-btn').disabled) {
+                            generateMore();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 'c':
+                        if (document.getElementById('results-state').classList.contains('active')) {
+                            copyValues();
+                            event.preventDefault();
+                        }
+                        break;
+                }
+
+                // Game-specific keyboard shortcuts
+                if (document.getElementById('game-state').classList.contains('active')) {
+                    this.handleGameKeys(lowerKey, event);
+                }
+            }
+
+            handleGameKeys(key, event) {
+                const choices = document.querySelectorAll('.choice');
+                
+                // Enhanced choice selection: support both ASDF and 1234
+                if (this.keyMapping.hasOwnProperty(key)) {
+                    const choiceIndex = this.keyMapping[key];
+                    if (choices[choiceIndex]) {
+                        selectChoice(choiceIndex);
+                        event.preventDefault();
+                        this.logger.log(`⌨️ Choice ${choiceIndex + 1} selected via keyboard: ${key.toUpperCase()}`, 'info');
+                    }
+                    return;
+                }
+
+                switch (key) {
+                    case 'arrowup':
+                        this.navigateChoices(-1, choices);
+                        event.preventDefault();
+                        break;
+                    
+                    case 'arrowdown':
+                        this.navigateChoices(1, choices);
+                        event.preventDefault();
+                        break;
+                    
+                    case 'enter':
+                        if (this.gameState.keyboardFocusIndex >= 0) {
+                            selectChoice(this.gameState.keyboardFocusIndex);
+                        }
+                        if (selectedChoiceIndex !== null) {
+                            continueGame();
+                        }
+                        event.preventDefault();
+                        break;
+                    
+                    case ' ':
+                        if (!document.getElementById('load-more-btn').disabled) {
+                            loadMore();
+                        } else if (!document.getElementById('generate-more-btn').disabled) {
+                            generateMore();
+                        }
+                        event.preventDefault();
+                        break;
+                }
+            }
+
+            navigateChoices(direction, choices) {
+                if (choices.length === 0) return;
+                
+                this.clearKeyboardFocus();
+                
+                this.gameState.keyboardFocusIndex += direction;
+                
+                if (this.gameState.keyboardFocusIndex < 0) {
+                    this.gameState.keyboardFocusIndex = choices.length - 1;
+                } else if (this.gameState.keyboardFocusIndex >= choices.length) {
+                    this.gameState.keyboardFocusIndex = 0;
+                }
+                
+                choices[this.gameState.keyboardFocusIndex].classList.add('keyboard-focus');
+                choices[this.gameState.keyboardFocusIndex].scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+            }
+
+            clearKeyboardFocus() {
+                document.querySelectorAll('.choice').forEach(choice => {
+                    choice.classList.remove('keyboard-focus');
+                });
+                this.gameState.keyboardFocusIndex = -1;
+            }
+        }
+
+        // === GLOBAL INSTANCES ===
+        
+        const logger = new Logger();
+        const dataManager = new DataManager(logger);
+        const gameState = new GameState(logger);
+        const keyboardController = new KeyboardController(gameState, logger);
+
+        let selectedChoiceIndex = null;
+        let currentDilemma = null;
+
+        // === MAIN APPLICATION LOGIC ===
+
+        async function initialize() {
+            try {
+                logger.log('=== VALUES.MD GENERATOR v3.0 ENHANCED MVP ===', 'info');
+                
+                showState('loading-state');
+                updateProgress('loading-progress', 10, '🔍 Checking local deployment files...');
+
+                const appData = await dataManager.loadAllData();
+                updateProgress('loading-progress', 60, '🧠 Processing ethical frameworks...');
+
+                // Initialize game state
+                initializeGameData(appData);
+                updateProgress('loading-progress', 80, '🎯 Preparing first ethical scenario...');
+
+                updateProgress('loading-progress', 100, '✅ Ready to begin assessment!');
+                setTimeout(startGame, 1000);
+
+            } catch (error) {
+                logger.log(`💥 Initialization failed: ${error.message}`, 'error');
+                showError(error);
+            }
+        }
+
+        function initializeGameData(appData) {
+            // Initialize motif scoring system
+            appData.motifs.forEach(motif => {
+                const key = motif.name || motif.id;
+                gameState.motifScores[key] = 0;
+            });
+
+            // Initialize framework scoring system
+            appData.frameworks.forEach(framework => {
+                gameState.frameworkScores[framework.id] = 0;
+            });
+
+            updateSmartControls();
+            logger.log('🎮 Game data structures initialized', 'success');
+        }
+
+        function startGame() {
+            logger.log('🚀 Starting values assessment game session', 'info');
+            gameState.reset();
+            showState('game-state');
+            loadNextDilemma();
+        }
+
+        function loadNextDilemma() {
+            gameState.questionStartTime = Date.now();
+            
+            currentDilemma = dataManager.getRandomUnusedDilemma();
+            if (!currentDilemma) {
+                logger.log('📋 Assessment complete - no more scenarios available', 'info');
+                finishGame();
+                return;
+            }
+
+            dataManager.markDilemmaUsed(currentDilemma.id);
+            
+            logger.log(`📖 Loading scenario: "${currentDilemma.title}"`, 'info');
+
+            // Update UI elements
+            document.getElementById('dilemma-title').textContent = currentDilemma.title;
+            document.getElementById('dilemma-scenario').textContent = currentDilemma.scenario;
+
+            displayMotifs(currentDilemma);
+            displayChoices(currentDilemma);
+            updateProgress();
+            updateSmartControls();
+
+            // Reset selection state
+            selectedChoiceIndex = null;
+            keyboardController.clearKeyboardFocus();
+        }
+
+        function displayMotifs(dilemma) {
+            const container = document.getElementById('motif-tags');
+            container.innerHTML = '';
+
+            if (dilemma.motifs || dilemma.target_motifs) {
+                const motifString = dilemma.motifs || dilemma.target_motifs;
+                const motifIds = motifString.split(',').map(m => m.trim());
+                
+                motifIds.forEach(motifId => {
+                    const motif = dataManager.loadedContent.motifs.find(m => 
+                        m.id === motifId || m.name === motifId
+                    );
+
+                    const tag = document.createElement('span');
+                    tag.className = 'motif-tag';
+                    tag.textContent = motif ? (motif.name || motif.id) : motifId;
+                    if (motif?.description) {
+                        tag.title = motif.description;
+                    }
+                    container.appendChild(tag);
+                });
+            }
+        }
+
+        function displayChoices(dilemma) {
+            const container = document.getElementById('choices-container');
+            container.innerHTML = '';
+
+            // Enhanced choice extraction that handles both formats
+            const choiceKeys = ['choice_a', 'choice_b', 'choice_c', 'choice_d'];
+            const altKeys = ['choice_1', 'choice_2', 'choice_3', 'choice_4'];
+            
+            const choices = [];
+            
+            for (let i = 0; i < 4; i++) {
+                const primaryKey = choiceKeys[i];
+                const altKey = altKeys[i];
+                const text = dilemma[primaryKey] || dilemma[altKey];
+                
+                if (text && text.trim() !== '') {
+                    choices.push({
+                        key: primaryKey,
+                        text: text.trim(),
+                        index: i,
+                        motif: dilemma[`${primaryKey}_motif`] || dilemma[`${altKey}_motif`] || null
+                    });
+                }
+            }
+
+            gameState.currentChoices = choices;
+
+            // Generate choice elements with enhanced keyboard hints
+            choices.forEach((choice) => {
+                const choiceElement = document.createElement('div');
+                choiceElement.className = 'choice';
+                choiceElement.onclick = () => selectChoice(choice.index);
+                
+                // Enhanced hotkey display
+                const hotkeys = [];
+                if (choice.index < 4) {
+                    hotkeys.push((choice.index + 1).toString());
+                }
+                const letterKeys = ['A', 'S', 'D', 'F'];
+                if (choice.index < letterKeys.length) {
+                    hotkeys.push(letterKeys[choice.index]);
+                }
+                
+                choiceElement.innerHTML = `
+                    <div class="choice-number">${choice.index + 1}</div>
+                    <div class="choice-text">${choice.text}</div>
+                    <div class="choice-hotkey">${hotkeys.join(' / ')}</div>
+                `;
+                
+                container.appendChild(choiceElement);
+            });
+
+            logger.log(`🎯 Displayed ${choices.length} choices for current scenario`, 'debug');
+        }
+
+        function selectChoice(index) {
+            // Clear previous selections
+            document.querySelectorAll('.choice').forEach(choice => {
+                choice.classList.remove('selected');
+            });
+
+            // Select current choice
+            const choices = document.querySelectorAll('.choice');
+            if (choices[index]) {
+                choices[index].classList.add('selected');
+                selectedChoiceIndex = index;
+                
+                // Auto-continue with slight delay for visual feedback
+                setTimeout(continueGame, 400);
+                
+                logger.log(`✅ Choice ${index + 1} selected and confirmed`, 'info');
+            }
+        }
+
+        function continueGame() {
+            if (selectedChoiceIndex === null || !currentDilemma) return;
+
+            const choice = gameState.currentChoices[selectedChoiceIndex];
+            const motifs = [];
+            
+            // Extract motifs from multiple possible sources
+            if (currentDilemma.motifs || currentDilemma.target_motifs) {
+                const motifString = currentDilemma.motifs || currentDilemma.target_motifs;
+                motifs.push(...motifString.split(',').map(m => m.trim()));
+            }
+            
+            if (choice.motif) {
+                motifs.push(choice.motif);
+            }
+
+            const response = {
+                dilemmaId: currentDilemma.id,
+                dilemmaTitle: currentDilemma.title,
+                choiceIndex: selectedChoiceIndex,
+                choiceKey: choice.key,
+                choiceText: choice.text,
+                motifs: [...new Set(motifs)] // Remove duplicates
+            };
+
+            gameState.recordResponse(response);
+            
+            // Enhanced completion logic
+            const stats = dataManager.getContentStats();
+            const shouldContinue = gameState.responses.length < 8 && dataManager.hasMoreDilemmas();
+            
+            if (shouldContinue) {
+                setTimeout(loadNextDilemma, 300); // Brief pause for UX
+            } else {
+                setTimeout(finishGame, 500);
+            }
+        }
+
+        function loadMore() {
+            if (dataManager.hasMoreDilemmas()) {
+                loadNextDilemma();
+                logger.log('📁 Loaded additional scenario from available content', 'info');
+            } else {
+                logger.log('⚠️ No additional scenarios available to load', 'warning');
+            }
+        }
+
+        function generateMore() {
+            // Enhanced placeholder for future LLM integration
+            const message = `🤖 LLM Generation Feature
+
+This would generate new ethical scenarios based on your response patterns and the loaded frameworks/motifs.
+
+Current implementation status:
+- Data structures: ✅ Ready
+- Motif tracking: ✅ Implemented  
+- Framework integration: ✅ Available
+- LLM API integration: 🚧 Coming soon
+
+To implement:
+1. Add API key configuration
+2. Create prompt templates using motifs.csv and frameworks.csv
+3. Generate scenarios matching your values profile
+4. Validate generated content quality`;
+
+            alert(message);
+            logger.log('🤖 LLM generation requested (feature in development)', 'info');
+        }
+
+        function updateSmartControls() {
+            const stats = dataManager.getContentStats();
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            const generateMoreBtn = document.getElementById('generate-more-btn');
+            const progressIndicator = document.getElementById('progress-indicator');
+            
+            // Update load more button
+            if (stats.available > 0) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.title = `📁 ${stats.available} more scenarios available in loaded data`;
+            } else {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.title = '📁 No additional scenarios available';
+            }
+            
+            // Update generate more button
+            generateMoreBtn.disabled = !gameState.llmConfigured;
+            generateMoreBtn.title = gameState.llmConfigured ? 
+                '✨ Generate new scenarios with AI based on your patterns' : 
+                '✨ LLM integration coming soon for scenario generation';
+
+            // Update progress indicator
+            if (progressIndicator) {
+                progressIndicator.textContent = `📊 Scenario ${gameState.responses.length + 1} • Available: ${stats.available}/${stats.total}`;
+            }
+        }
+
+        function updateProgress() {
+            const stats = dataManager.getContentStats();
+            
+            document.getElementById('progress-text').textContent = 
+                `Question ${gameState.responses.length + 1}`;
+            document.getElementById('available-content').textContent = 
+                `Available: ${stats.available}/${stats.total}`;
+            
+            // Enhanced progress calculation
+            const maxQuestions = Math.min(stats.total, 10);
+            const progressPercent = ((gameState.responses.length) / maxQuestions) * 100;
+            document.getElementById('game-progress').style.width = `${Math.min(progressPercent, 100)}%`;
+        }
+
+        function finishGame() {
+            logger.log('🎉 Assessment session completed successfully', 'success');
+            showState('results-state');
+            updatePerformanceMetrics();
+            generateAndDisplayValues();
+        }
+
+        function updatePerformanceMetrics() {
+            const metrics = gameState.getMetrics();
+            const stats = dataManager.getContentStats();
+            
+            document.getElementById('completion-time').textContent = `${metrics.duration}m`;
+            document.getElementById('consistency-score').textContent = `${metrics.consistency}%`;
+            document.getElementById('scenarios-used').textContent = `${stats.used}`;
+            document.getElementById('values-identified').textContent = `${metrics.topValues}`;
+        }
+
+        function generateAndDisplayValues() {
+            const topMotifs = gameState.getTopMotifs(6);
+            const metrics = gameState.getMetrics();
+            const stats = dataManager.getContentStats();
+            
+            // Enhanced values.md generation with richer content
+            const valuesContent = `# Personal Values Profile
+
+## Session Metadata
+- **Generated**: ${new Date().toISOString()}
+- **Session ID**: \`${gameState.sessionId}\`
+- **Data Source**: ${dataManager.dataSource} (${dataManager.dataSource === 'local' ? 'production deployment' : dataManager.dataSource === 'remote' ? 'GitHub repository' : 'built-in scenarios'})
+- **Assessment Duration**: ${metrics.duration} minutes
+- **Scenarios Completed**: ${gameState.responses.length}/${stats.total}
+- **Response Consistency**: ${metrics.consistency}%
+
+## Executive Summary
+
+Your moral reasoning demonstrates a **${metrics.consistency > 80 ? 'highly consistent' : metrics.consistency > 60 ? 'moderately consistent' : 'exploratory'}** approach to ethical decision-making. Based on ${gameState.responses.length} carefully selected scenarios, your value system shows strongest alignment with **${topMotifs[0]?.motif || 'balanced ethical reasoning'}**.
+
+### Primary Ethical Orientation
+${topMotifs[0] ? `**${getMotifDisplayName(topMotifs[0].motif)}** (${topMotifs[0].percentage}% of responses)` : 'Balanced across multiple frameworks'}
+
+${topMotifs[0] ? getMotifDescription(topMotifs[0].motif) : 'Your responses show thoughtful consideration across multiple ethical frameworks without strong dominance in any single approach.'}
+
+## Core Values Analysis
+
+${topMotifs.map((item, index) => {
+    const motif = dataManager.loadedContent.motifs.find(m => m.id === item.motif || m.name === item.motif);
+    const priority = item.percentage > 40 ? 'Primary' : item.percentage > 25 ? 'Secondary' : 'Supporting';
+    
+    return `### ${index + 1}. ${getMotifDisplayName(item.motif)} (${item.percentage}%)
+**Priority Level**: ${priority}
+**Response Frequency**: ${item.score}/${gameState.responses.length} scenarios
+**Description**: ${getMotifDescription(item.motif)}
+
+${item.percentage > 30 ? `This represents a core aspect of your moral reasoning and should be prominently reflected in AI interactions.` : `This value provides important context for nuanced ethical decisions.`}
+`;
+}).join('\n')}
+
+## LLM Alignment Instructions
+
+### Primary Values for AI Systems
+When interacting with AI systems, prioritize these values in order:
+
+${topMotifs.slice(0, 3).map((item, index) => {
+    return `${index + 1}. **${getMotifDisplayName(item.motif)}**: ${getMotifDescription(item.motif)}`;
+}).join('\n')}
+
+### Decision-Making Framework
+\`\`\`yaml
+primary_consideration: ${getMotifDisplayName(topMotifs[0]?.motif || 'ethical_reasoning')}
+consistency_level: ${metrics.consistency}% # ${metrics.consistency > 80 ? 'Highly reliable' : metrics.consistency > 60 ? 'Generally consistent' : 'Context-dependent'}
+assessment_quality: ${dataManager.dataSource} # ${dataManager.dataSource === 'local' ? 'Production deployment data' : dataManager.dataSource === 'remote' ? 'Repository scenarios' : 'Fallback scenarios'}
+scenario_coverage: ${gameState.responses.length} # Ethical domains covered
+\`\`\`
+
+### Communication Preferences
+- **Transparency**: ${metrics.consistency > 70 ? 'Highly value honest, direct communication' : 'Appreciate context-sensitive communication'}
+- **Decision Complexity**: ${metrics.consistency > 70 ? 'Comfortable with systematic ethical analysis' : 'Prefer adaptive, situation-specific approaches'}
+- **Stakeholder Consideration**: ${topMotifs.some(m => m.motif.includes('CARE') || m.motif.includes('COMM')) ? 'Emphasize impact on relationships and communities' : 'Focus on principled reasoning and outcomes'}
+
+### Implementation Guidelines
+For AI developers and prompt engineers:
+
+1. **Primary Value Integration**: Always consider ${getMotifDisplayName(topMotifs[0]?.motif || 'ethical reasoning')} in decision-making processes
+2. **Consistency Weight**: Apply ${metrics.consistency}% confidence to value-based decisions
+3. **Contextual Adaptation**: ${metrics.consistency > 70 ? 'Maintain consistent ethical framework across contexts' : 'Adapt approach based on specific situational factors'}
+4. **Stakeholder Impact**: ${topMotifs.some(m => m.motif.includes('CARE') || m.motif.includes('COMM')) ? 'Always assess impact on relationships and community welfare' : 'Focus on principled outcomes and systematic analysis'}
+
+## Response Pattern Analysis
+
+### Ethical Scenario Performance
+- **Total Scenarios**: ${gameState.responses.length} completed
+- **Average Response Time**: ${gameState.responses.length > 0 ? Math.round(gameState.responses.reduce((sum, r) => sum + (r.timeSpent || 0), 0) / gameState.responses.length / 1000) : 0} seconds
+- **Decision Consistency**: ${metrics.consistency}% across different ethical domains
+- **Value Diversity**: ${Object.keys(gameState.motifScores).length} distinct ethical frameworks engaged
+
+### Recommended AI Prompting
+When using this values profile with AI systems:
+
+\`\`\`
+You are interacting with someone whose core values emphasize ${topMotifs.slice(0, 2).map(m => getMotifDisplayName(m.motif)).join(' and ')}. 
+In your responses, prioritize ${topMotifs[0] ? getMotifDescription(topMotifs[0].motif).toLowerCase() : 'thoughtful ethical reasoning'}.
+Consistency level: ${metrics.consistency}% - ${metrics.consistency > 70 ? 'maintain systematic approach' : 'adapt to context while respecting core principles'}.
+\`\`\`
+
+---
+
+*This profile was generated through systematic ethical assessment using ${dataManager.dataSource === 'local' ? 'production deployment data' : dataManager.dataSource === 'remote' ? 'GitHub repository scenarios' : 'built-in ethical dilemmas'}. Use it to prime AI systems for value-aligned responses. For updates or methodology details, visit [values.md](https://values.md).*
+
+## Technical Metadata
+\`\`\`json
+{
+  "generator_version": "3.0_enhanced_mvp",
+  "data_source": "${dataManager.dataSource}",
+  "scenarios_available": ${stats.total},
+  "scenarios_completed": ${gameState.responses.length},
+  "session_duration_minutes": ${metrics.duration},
+  "consistency_score": ${metrics.consistency},
+  "top_values": ${JSON.stringify(topMotifs.slice(0, 3).map(m => ({
+    motif: m.motif,
+    percentage: m.percentage,
+    name: getMotifDisplayName(m.motif)
+  })))},
+  "generated_timestamp": "${new Date().toISOString()}"
+}
+\`\`\``;
+
+            document.getElementById('values-output').textContent = valuesContent;
+            logger.log('📋 Enhanced values.md profile generated successfully', 'success');
+        }
+
+        // === UTILITY FUNCTIONS ===
+
+        function getMotifDisplayName(motifId) {
+            const motif = dataManager.loadedContent.motifs.find(m => m.id === motifId || m.name === motifId);
+            if (motif) {
+                return motif.name || motif.id;
+            }
+            
+            // Fallback formatting for unknown motifs
+            return motifId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function getMotifDescription(motifId) {
+            const motif = dataManager.loadedContent.motifs.find(m => m.id === motifId || m.name === motifId);
+            if (motif && motif.description) {
+                return motif.description;
+            }
+            
+            // Enhanced fallback descriptions
+            const fallbackDescriptions = {
+                'UTIL_CALC': 'Systematic approach to maximizing overall well-being and positive outcomes for the greatest number of people',
+                'DEONT_DUTY': 'Strong adherence to moral rules, duties, and categorical principles regardless of consequences',
+                'VIRT_CHAR': 'Focus on developing and demonstrating virtuous character traits and moral excellence',
+                'CARE_REL': 'Emphasis on maintaining caring relationships and responding to contextual needs of individuals',
+                'JUST_FAIR': 'Commitment to fairness, equality, and just distribution of benefits and burdens',
+                'RESP_ACC': 'Taking responsibility for actions and being accountable for their consequences',
+                'FREE_AUT': 'Valuing individual liberty, self-determination, and autonomous decision-making',
+                'COMM_SOL': 'Prioritizing collective good, community bonds, and shared social values',
+                'WELL_FLOUR': 'Focus on promoting human welfare, flourishing, and quality of life',
+                'AUTH_INT': 'Commitment to authenticity, personal integrity, and being true to one\'s values',
+                'HARM_MIN': 'Primary focus on preventing harm and reducing suffering wherever possible',
+                'EXPERT_DEF': 'Respect for expert knowledge and deferring to professional judgment in specialized domains'
+            };
+            
+            return fallbackDescriptions[motifId] || 'Important ethical consideration that guides moral decision-making';
+        }
+
+        function showState(stateId) {
+            ['loading-state', 'error-state', 'game-state', 'results-state'].forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            document.getElementById(stateId).classList.add('active');
+            
+            // Accessibility: focus management
+            const activeState = document.getElementById(stateId);
+            if (activeState) {
+                const focusTarget = activeState.querySelector('h1, .btn, input') || activeState;
+                setTimeout(() => focusTarget.focus(), 100);
+            }
+        }
+
+        function showError(error) {
+            const errorDetails = document.getElementById('error-details');
+            
+            errorDetails.innerHTML = `
+                <strong>🚨 System Error:</strong> ${error.message}<br><br>
+                <strong>💡 Troubleshooting:</strong><br>
+                ${dataManager.dataSource === 'unknown' ? 
+                    '• For local files: Serve via HTTP (see help for commands)<br>• Check file paths: ensure CSV files are in correct locations<br>' : 
+                    '• Check internet connection for GitHub repository access<br>• Verify repository URLs are accessible<br>'}
+                <strong>🔄 Next Steps:</strong> Try fallback scenarios to continue the assessment.
+            `;
+            
+            showState('error-state');
+            logger.log(`💥 Error displayed to user: ${error.message}`, 'error');
+        }
+
+        function useFallbackData() {
+            logger.log('👤 User chose to proceed with fallback data', 'info');
+            try {
+                const fallbackData = dataManager.getFallbackData();
+                initializeGameData(fallbackData);
+                startGame();
+            } catch (error) {
+                logger.log(`💥 Fallback data loading failed: ${error.message}`, 'error');
+                alert('Unable to load fallback data. Please refresh the page and try again.');
+            }
+        }
+
+        function updateProgress(elementId, percent, text = '') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
+            }
+            
+            if (text) {
+                const textElement = document.getElementById('loading-text');
+                if (textElement) {
+                    textElement.textContent = text;
+                }
+            }
+        }
+
+        function toggleHelp() {
+            const overlay = document.getElementById('help-overlay');
+            overlay.classList.toggle('active');
+            
+            if (overlay.classList.contains('active')) {
+                logger.log('❓ Help panel opened', 'info');
+                // Focus the help panel for accessibility
+                setTimeout(() => {
+                    const helpPanel = overlay.querySelector('.help-panel h2');
+                    if (helpPanel) helpPanel.focus();
+                }, 100);
+            } else {
+                logger.log('❓ Help panel closed', 'info');
+            }
+        }
+
+        function toggleDebug() {
+            const panel = document.getElementById('debug-panel');
+            const arrow = document.getElementById('debug-arrow');
+            
+            panel.classList.toggle('collapsed');
+            
+            if (panel.classList.contains('collapsed')) {
+                arrow.textContent = '▶';
+                logger.log('🔧 Debug panel collapsed', 'debug');
+            } else {
+                arrow.textContent = '▼';
+                logger.log('🔧 Debug panel expanded', 'debug');
+            }
+        }
+
+        function downloadValues() {
+            try {
+                const content = document.getElementById('values-output').textContent;
+                const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `values-${gameState.sessionId}-${new Date().toISOString().split('T')[0]}.md`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                logger.log('📄 Values.md file downloaded successfully', 'success');
+                
+                // Optional: Show success feedback
+                setTimeout(() => {
+                    alert('✅ Your values.md file has been downloaded!');
+                }, 100);
+                
+            } catch (error) {
+                logger.log(`💥 Download failed: ${error.message}`, 'error');
+                alert('❌ Download failed. Please try copying the content instead.');
+            }
+        }
+
+        async function copyValues() {
+            try {
+                const content = document.getElementById('values-output').textContent;
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(content);
+                    logger.log('📋 Values.md copied to clipboard via Clipboard API', 'success');
+                } else {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = content;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    logger.log('📋 Values.md copied to clipboard via fallback method', 'success');
+                }
+                
+                // User feedback
+                const copyBtn = document.querySelector('[onclick="copyValues()"]');
+                if (copyBtn) {
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '✅ Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                logger.log(`💥 Copy failed: ${error.message}`, 'error');
+                alert('❌ Copy failed. Please manually select and copy the text from the output area.');
+            }
+        }
+
+        function restart() {
+            logger.log('🔄 User initiated application restart', 'info');
+            try {
+                // Reset all state
+                gameState.reset();
+                selectedChoiceIndex = null;
+                currentDilemma = null;
+                dataManager.usedDilemmas.clear();
+                
+                // Clear UI state
+                keyboardController.clearKeyboardFocus();
+                
+                // Restart the game
+                startGame();
+                
+            } catch (error) {
+                logger.log(`💥 Restart failed: ${error.message}`, 'error');
+                // Full page reload as fallback
+                if (confirm('Restart encountered an error. Reload the page?')) {
+                    window.location.reload();
+                }
+            }
+        }
+
+        // === INITIALIZATION AND ERROR HANDLING ===
+
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            logger.log(`💥 Global error: ${event.error?.message || event.message}`, 'error');
+        });
+
+        // Unhandled promise rejection handler  
+        window.addEventListener('unhandledrejection', (event) => {
+            logger.log(`💥 Unhandled promise rejection: ${event.reason}`, 'error');
+        });
+
+        // Enhanced DOM ready handler
+        document.addEventListener('DOMContentLoaded', () => {
+            logger.log('🎯 DOM loaded - initializing enhanced Values.md Generator v3.0', 'info');
+            
+            // Verify critical elements exist
+            const criticalElements = ['main-content', 'debug-log', 'help-overlay'];
+            const missing = criticalElements.filter(id => !document.getElementById(id));
+            
+            if (missing.length > 0) {
+                logger.log(`💥 Critical DOM elements missing: ${missing.join(', ')}`, 'error');
+                alert('Application initialization failed. Please refresh the page.');
+                return;
+            }
+            
+            // Set focus for accessibility
+            const skipLink = document.querySelector('.skip-link');
+            if (skipLink) {
+                skipLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('main-content').focus();
+                });
+            }
+            
+            // Initialize the application
+            initialize().catch(error => {
+                logger.log(`💥 Application initialization failed: ${error.message}`, 'error');
+                showError(error);
+            });
+        });
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            logger.log(`⚡ Page fully loaded in ${(loadTime / 1000).toFixed(2)}s`, 'info');
+        });
+
+        // Visibility change handling for better UX
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                logger.log('👁️ Page became visible', 'debug');
+            } else {
+                logger.log('🙈 Page became hidden', 'debug');
+            }
+        });
+
+        // === ENHANCED FEATURES ===
+
+        // Auto-save functionality (using sessionStorage as temporary measure)
+        function autoSave() {
+            if (gameState.responses.length > 0) {
+                try {
+                    const saveData = {
+                        sessionId: gameState.sessionId,
+                        responses: gameState.responses,
+                        timestamp: new Date().toISOString(),
+                        version: '3.0'
+                    };
+                    
+                    sessionStorage.setItem('values_assessment_progress', JSON.stringify(saveData));
+                    logger.log('💾 Progress auto-saved to session storage', 'debug');
+                } catch (error) {
+                    logger.log(`💥 Auto-save failed: ${error.message}`, 'warning');
+                }
+            }
+        }
+
+        // Attempt to restore previous session
+        function attemptRestore() {
+            try {
+                const saved = sessionStorage.getItem('values_assessment_progress');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (data.responses && data.responses.length > 0) {
+                        const shouldRestore = confirm(
+                            `🔄 Found previous session with ${data.responses.length} responses.\n\nWould you like to continue where you left off?`
+                        );
+                        
+                        if (shouldRestore) {
+                            gameState.responses = data.responses;
+                            gameState.sessionId = data.sessionId;
+                            // Rebuild motif scores
+                            data.responses.forEach(response => {
+                                if (response.motifs) {
+                                    response.motifs.forEach(motif => {
+                                        gameState.motifScores[motif] = (gameState.motifScores[motif] || 0) + 1;
+                                    });
+                                }
+                            });
+                            logger.log(`🔄 Session restored: ${data.responses.length} responses`, 'success');
+                            return true;
+                        }
+                    }
+                }
+            } catch (error) {
+                logger.log(`💥 Session restore failed: ${error.message}`, 'warning');
+            }
+            
+            // Clear invalid session data
+            sessionStorage.removeItem('values_assessment_progress');
+            return false;
+        }
+
+        // Periodically auto-save during assessment
+        setInterval(() => {
+            if (document.getElementById('game-state').classList.contains('active')) {
+                autoSave();
+            }
+        }, 30000); // Every 30 seconds
+
+        // Export logs functionality for debugging
+        function exportDebugLogs() {
+            const logData = logger.exportLogs();
+            const content = JSON.stringify(logData, null, 2);
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `values-debug-logs-${Date.now()}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            logger.log('📊 Debug logs exported', 'info');
+        }
+
+        // Make export function available globally for debugging
+        window.exportDebugLogs = exportDebugLogs;
+
+        logger.log('🎉 Enhanced Values.md Generator v3.0 fully initialized', 'success');
+    </script>
 </body>
 </html>
