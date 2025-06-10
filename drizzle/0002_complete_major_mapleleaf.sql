@@ -1,0 +1,1 @@
+ALTER TABLE "user_responses" ADD COLUMN "perceived_difficulty" integer;

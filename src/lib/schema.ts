@@ -63,6 +63,7 @@ export const userResponses = pgTable('user_responses', {
   chosenOption: varchar('chosen_option').notNull(), // a, b, c, or d
   reasoning: text('reasoning'),
   responseTime: integer('response_time'), // milliseconds
+  perceivedDifficulty: integer('perceived_difficulty'), // 1-10 scale
   createdAt: timestamp('created_at').defaultNow(),
 });
 

@@ -15,6 +15,13 @@
       "when": 1749579527364,
       "tag": "0001_minor_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749582329578,
+      "tag": "0002_complete_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

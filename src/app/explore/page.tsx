@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
+import { useProgress } from '@/components/progress-context';
 
 interface Dilemma {
   dilemmaId: string;
@@ -25,6 +27,7 @@ interface Response {
   chosenOption: string;
   reasoning: string;
   responseTime: number;
+  perceivedDifficulty: number;
 }
 
 export default function ExplorePage() {
@@ -33,14 +36,29 @@ export default function ExplorePage() {
   const [responses, setResponses] = useState<Response[]>([]);
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [reasoning, setReasoning] = useState<string>('');
+  const [perceivedDifficulty, setPerceivedDifficulty] = useState<number>(5);
   const [loading, setLoading] = useState(true);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const router = useRouter();
+  const { setProgress, hideProgress } = useProgress();
 
   useEffect(() => {
     fetchDilemmas();
   }, []);
+
+  useEffect(() => {
+    if (dilemmas.length > 0) {
+      setProgress(currentIndex + 1, dilemmas.length);
+    }
+    return () => {
+      hideProgress();
+    };
+  }, [currentIndex, dilemmas.length, setProgress, hideProgress]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentIndex]);
 
   const fetchDilemmas = async () => {
     try {
@@ -63,6 +81,7 @@ export default function ExplorePage() {
       chosenOption: selectedOption,
       reasoning,
       responseTime,
+      perceivedDifficulty,
     };
 
     const updatedResponses = [...responses, newResponse];
@@ -78,6 +97,7 @@ export default function ExplorePage() {
       setCurrentIndex(currentIndex + 1);
       setSelectedOption('');
       setReasoning('');
+      setPerceivedDifficulty(5);
       setStartTime(Date.now());
     } else {
       // All dilemmas completed, go to results
@@ -93,6 +113,7 @@ export default function ExplorePage() {
       if (prevResponse) {
         setSelectedOption(prevResponse.chosenOption);
         setReasoning(prevResponse.reasoning);
+        setPerceivedDifficulty(prevResponse.perceivedDifficulty);
       }
     }
   };
@@ -121,15 +142,6 @@ export default function ExplorePage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">Progress</span>
-            <span className="text-sm text-muted-foreground">{currentIndex + 1} of {dilemmas.length}</span>
-          </div>
-          <Progress value={((currentIndex + 1) / dilemmas.length) * 100} className="h-2" />
-        </div>
-
         {/* Dilemma card */}
         <Card className="mb-8">
           <CardHeader>
@@ -177,6 +189,26 @@ export default function ExplorePage() {
                   </div>
                 </label>
               ))}
+            </div>
+
+            {/* Difficulty rating */}
+            <div className="space-y-3">
+              <Label>How difficult was this dilemma to decide?</Label>
+              <div className="space-y-2">
+                <Slider
+                  value={[perceivedDifficulty]}
+                  onValueChange={(value) => setPerceivedDifficulty(value[0])}
+                  max={10}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>1 - Very Easy</span>
+                  <span className="font-medium">{perceivedDifficulty}/10</span>
+                  <span>10 - Very Hard</span>
+                </div>
+              </div>
             </div>
 
             {/* Optional reasoning */}

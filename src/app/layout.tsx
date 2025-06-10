@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
-import { ModeToggle } from "@/components/mode-toggle";
+import { Header } from "@/components/header";
+import { ProgressProvider } from "@/components/progress-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,10 +38,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="fixed top-4 right-4 z-50">
-              <ModeToggle />
-            </div>
-            {children}
+            <ProgressProvider>
+              <Header />
+              {children}
+            </ProgressProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>
