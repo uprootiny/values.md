@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -24,7 +24,6 @@ const navigation = [
 
 export function Header() {
   const { current, total, showProgress } = useProgress();
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -55,7 +54,7 @@ export function Header() {
         {/* Mobile Navigation */}
         <div className="flex md:hidden items-center space-x-2">
           <ModeToggle />
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
@@ -65,28 +64,28 @@ export function Header() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+            <SheetContent>
               <SheetHeader>
                 <SheetTitle>Navigation</SheetTitle>
                 <SheetDescription>
                   Navigate through the values.md platform
                 </SheetDescription>
               </SheetHeader>
-              <nav className="flex flex-col gap-4 mt-6">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="block px-2 py-1 text-lg hover:text-foreground/80 text-foreground/60 transition-colors"
-                    onClick={() => {
-                      setIsOpen(false);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
+              <div className="grid flex-1 auto-rows-min gap-6 px-4">
+                <nav className="grid gap-4">
+                  {navigation.map((item) => (
+                    <SheetClose asChild key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      >
+                        {item.name}
+                      </Link>
+                    </SheetClose>
+                  ))}
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
