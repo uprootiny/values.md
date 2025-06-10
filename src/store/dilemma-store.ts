@@ -118,6 +118,9 @@ export const useDilemmaStore = create<DilemmaState>()(
             perceivedDifficulty: 5,
             startTime: Date.now()
           });
+          
+          // Scroll to top on navigation
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           return true; // Not last
         }
         
@@ -134,6 +137,9 @@ export const useDilemmaStore = create<DilemmaState>()(
           
           // Restore previous response
           state.restoreResponseForIndex(prevIndex);
+          
+          // Scroll to top on navigation
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       },
       

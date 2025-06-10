@@ -75,10 +75,10 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
     };
   }, [currentIndex, dilemmas.length, setProgress, hideProgress, getProgress]);
 
-  // Scroll to top when dilemma changes
+  // Scroll to top when URL changes (direct navigation or initial load)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentIndex]);
+  }, [resolvedParams.uuid]);
 
   const handleNext = () => {
     if (!selectedOption) return;

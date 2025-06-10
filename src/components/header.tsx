@@ -31,7 +31,7 @@ export function Header() {
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link href="/">
+        <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <span className="font-bold text-lg text-foreground/100 hover:text-foreground/80 transition-colors">values.md</span>
         </Link>
 
@@ -43,6 +43,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
                 {item.name}
               </Link>
@@ -77,7 +78,10 @@ export function Header() {
                     key={item.href}
                     href={item.href}
                     className="block px-2 py-1 text-lg hover:text-foreground/80 text-foreground/60 transition-colors"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
                   >
                     {item.name}
                   </Link>
