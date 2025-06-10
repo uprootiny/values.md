@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Values.md
 
-## Getting Started
+We are building a research project website where users can explore their own values and generate their "values.md" markdown file - the is intended to later instruct LLMs to make choices aligned with the user's values.
 
-First, run the development server:
+The user journey is as follows:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. landing: understand what's going on. 
+2. click a button to explore their values nd create their values.md
+3. random 12 dilemmas (sufficiently different ones across params) are taken from the database
+4. user answers dilemmas (chooses one of 4 options optionally adds reasoning). all choices are kept in local storage. for privacy reasons.
+5. based on the users answers we programmatically generate their values.md file v1 and we show to them instructions on how to use it
+6. we also show to them how their answers stack up against the "default" answers by the most popular leading LLMs of today
+7. we ask the user permissions to add their choices to the database anonymously. if they agree - we ask for some socio-demographic information and add to the database of answers.
+8. user can choose to do another round and keep growing / editing their values.md
+9. researchers at any point can download the list of dilemmas and user answers and LLM answers for analysis
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- /admin (password auth protected)=> admin panel where we can generate more pre-generated dilemmas, see stats, tune params etc.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+TODO:
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[ ] connect to the DB (remote postgres on neon)
+[ ] create openrouter service for LLMs
+[ ] create the /admin interface, password protect
+[ ] create a simple "generate a dilemma" button in the admin interface that uses openrouter to generate a dilemma
+[ ] create the ontology of the dilemmas, answers, motifs, metadata
+[ ] design DB schema
+[ ] populate the DB with key ingredients into a dilemma: ethical frameworks, motif, context (more details on this to follow)
+[ ] create a dilemma generator that takes ingredients, generates dilemmas and add them to the DB
+[ ] populate the DB with 100 dilemmas, making sure they are diverse
+[ ] create the user interface steps
