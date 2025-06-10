@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, integer, decimal, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, integer, decimal, timestamp, boolean, uuid, primaryKey } from 'drizzle-orm/pg-core';
 
 // Ethical frameworks taxonomy
 export const frameworks = pgTable('frameworks', {
@@ -88,9 +88,56 @@ export const llmResponses = pgTable('llm_responses', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Auth.js required tables
+export const users = pgTable('users', {
+  id: varchar('id').notNull().primaryKey(),
+  name: varchar('name'),
+  email: varchar('email').notNull(),
+  emailVerified: timestamp('emailVerified', { mode: 'date' }),
+  image: varchar('image'),
+  role: varchar('role').default('user'),
+});
+
+export const accounts = pgTable('accounts', {
+  userId: varchar('userId')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar('type').notNull(),
+  provider: varchar('provider').notNull(),
+  providerAccountId: varchar('providerAccountId').notNull(),
+  refresh_token: text('refresh_token'),
+  access_token: text('access_token'),
+  expires_at: integer('expires_at'),
+  token_type: varchar('token_type'),
+  scope: varchar('scope'),
+  id_token: text('id_token'),
+  session_state: varchar('session_state'),
+}, (account) => ({
+  compoundKey: primaryKey({
+    columns: [account.provider, account.providerAccountId],
+  }),
+}));
+
+export const sessions = pgTable('sessions', {
+  sessionToken: varchar('sessionToken').notNull().primaryKey(),
+  userId: varchar('userId')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
+});
+
+export const verificationTokens = pgTable('verificationTokens', {
+  identifier: varchar('identifier').notNull(),
+  token: varchar('token').notNull(),
+  expires: timestamp('expires', { mode: 'date' }).notNull(),
+}, (vt) => ({
+  compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+}));
+
 export type Framework = typeof frameworks.$inferSelect;
 export type Motif = typeof motifs.$inferSelect;
 export type Dilemma = typeof dilemmas.$inferSelect;
 export type UserResponse = typeof userResponses.$inferSelect;
 export type UserDemographics = typeof userDemographics.$inferSelect;
 export type LlmResponse = typeof llmResponses.$inferSelect;
+export type User = typeof users.$inferSelect;

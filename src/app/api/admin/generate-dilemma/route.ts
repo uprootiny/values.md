@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { openRouter } from '../../../../../lib/openrouter';
-import { db } from '../../../../../lib/db';
-import { dilemmas } from '../../../../../lib/schema';
-
-function checkAdminAuth(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return false;
-  
-  const token = authHeader.replace('Bearer ', '');
-  return token === process.env.ADMIN_PASSWORD;
-}
+import { getServerSession } from 'next-auth';
+import { authConfig } from '@/lib/auth';
+import { openRouter } from '@/lib/openrouter';
+import { db } from '@/lib/db';
+import { dilemmas } from '@/lib/schema';
 
 export async function POST(request: NextRequest) {
   try {
     // Check admin authentication
-    if (!checkAdminAuth(request)) {
+    const session = await getServerSession(authConfig);
+    if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

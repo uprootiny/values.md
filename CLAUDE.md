@@ -7,7 +7,7 @@ Research platform for exploring personal values through ethical dilemmas to gene
 - **Frontend**: Next.js 14+ with TypeScript
 - **Database**: PostgreSQL (Neon Cloud)
 - **LLM Services**: OpenRouter API
-- **Authentication**: Password protection for admin
+- **Authentication**: NextAuth.js with JWT sessions for admin
 - **Storage**: Local storage for privacy (user responses)
 - **Deployment**: TBD
 
@@ -185,6 +185,7 @@ DATABASE_URL=postgresql://...
 OPENROUTER_API_KEY=sk-...
 ADMIN_PASSWORD=...
 NEXTAUTH_SECRET=...
+NEXTAUTH_URL=http://localhost:3000
 ```
 
 ## Development Priorities
@@ -200,4 +201,50 @@ NEXTAUTH_SECRET=...
 - `npm run dev` - Development server
 - `npm run build` - Production build
 - `npm run lint` - Code linting
-- `npm run typecheck` - TypeScript checking
+- `npx tsc --noEmit` - TypeScript checking
+- `npx drizzle-kit generate` - Generate database migrations
+- `npx drizzle-kit push` - Push schema changes to database
+- `npx tsx scripts/seed-admin.ts` - Create admin user
+
+## Project Structure
+```
+src/
+├── app/           # Next.js app router pages & API routes
+├── components/    # Reusable UI components  
+├── lib/           # Database, utilities, external services
+│   ├── auth.ts    # NextAuth.js configuration
+│   ├── db.ts      # Database connection
+│   ├── schema.ts  # Drizzle schema definitions
+│   └── utils.ts   # Utility functions
+└── types/         # TypeScript type declarations
+scripts/           # Database seeding and utility scripts
+```
+
+## Authentication Implementation
+
+The admin authentication system uses NextAuth.js with:
+
+### Key Features
+- **JWT Sessions**: Credentials provider requires JWT strategy
+- **Database User Validation**: Admin user stored in PostgreSQL
+- **Environment Password**: Uses `ADMIN_PASSWORD` from .env
+- **Session Persistence**: JWT tokens maintain login state
+- **Role-based Access**: Admin role required for protected routes
+
+### Admin Login
+- **Email**: `admin@values.md`
+- **Password**: Set via `ADMIN_PASSWORD` environment variable
+- **Access**: Available at `/admin` route
+
+### Implementation Files
+- `src/lib/auth.ts` - Centralized NextAuth configuration
+- `src/app/api/auth/[...nextauth]/route.ts` - NextAuth API handler
+- `src/app/admin/page.tsx` - Admin panel with authentication
+- `src/types/next-auth.d.ts` - TypeScript declarations for NextAuth
+- `scripts/seed-admin.ts` - Creates admin user in database
+
+### Database Tables (Auth.js Schema)
+- `users` - User accounts with roles
+- `accounts` - OAuth provider accounts  
+- `sessions` - User sessions (unused with JWT)
+- `verificationTokens` - Email verification tokens

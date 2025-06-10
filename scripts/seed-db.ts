@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { db } from '../lib/db';
-import { frameworks, motifs, dilemmas } from '../lib/schema';
+import { db } from '../src/lib/db';
+import { frameworks, motifs, dilemmas } from '../src/lib/schema';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

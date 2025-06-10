@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,17 +14,29 @@ interface GeneratedDilemma {
 }
 
 export default function AdminPage() {
+  const { data: session, status } = useSession();
+  const [email, setEmail] = useState('admin@values.md');
   const [password, setPassword] = useState('');
-  const [authenticated, setAuthenticated] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generatedDilemma, setGeneratedDilemma] = useState<GeneratedDilemma | null>(null);
   const [error, setError] = useState('');
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple client-side check - real auth happens on API
-    if (password) {
-      setAuthenticated(true);
+    setError('');
+    
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+      
+      if (result?.error) {
+        setError('Invalid credentials');
+      }
+    } catch (error) {
+      setError('Authentication failed');
     }
   };
 
@@ -36,7 +49,6 @@ export default function AdminPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${password}`,
         },
         body: JSON.stringify({
           frameworks: ['UTIL_CALC', 'DEONT_ABSOLUTE'],
@@ -48,8 +60,7 @@ export default function AdminPage() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          setAuthenticated(false);
-          setError('Authentication failed');
+          await signOut();
           return;
         }
         throw new Error('Failed to generate dilemma');
@@ -65,7 +76,19 @@ export default function AdminPage() {
     }
   };
 
-  if (!authenticated) {
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <p className="text-center">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!session) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -75,7 +98,17 @@ export default function AdminPage() {
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Admin Password</Label>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -101,8 +134,14 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-3xl">Admin Dashboard</CardTitle>
+            <Button 
+              onClick={() => signOut()} 
+              variant="outline"
+            >
+              Logout
+            </Button>
           </CardHeader>
           
           <CardContent className="space-y-6">
