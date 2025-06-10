@@ -32,7 +32,7 @@ export const motifs = pgTable('motifs', {
 
 // Ethical dilemma scenarios
 export const dilemmas = pgTable('dilemmas', {
-  dilemmaId: varchar('dilemma_id').primaryKey(),
+  dilemmaId: uuid('dilemma_id').defaultRandom().primaryKey(),
   domain: varchar('domain'),
   generatorType: varchar('generator_type'),
   difficulty: integer('difficulty'),
@@ -59,7 +59,7 @@ export const dilemmas = pgTable('dilemmas', {
 export const userResponses = pgTable('user_responses', {
   responseId: uuid('response_id').defaultRandom().primaryKey(),
   sessionId: varchar('session_id').notNull(),
-  dilemmaId: varchar('dilemma_id').notNull().references(() => dilemmas.dilemmaId),
+  dilemmaId: uuid('dilemma_id').notNull().references(() => dilemmas.dilemmaId),
   chosenOption: varchar('chosen_option').notNull(), // a, b, c, or d
   reasoning: text('reasoning'),
   responseTime: integer('response_time'), // milliseconds
@@ -82,7 +82,7 @@ export const userDemographics = pgTable('user_demographics', {
 export const llmResponses = pgTable('llm_responses', {
   llmId: varchar('llm_id').notNull(),
   modelName: varchar('model_name').notNull(),
-  dilemmaId: varchar('dilemma_id').notNull().references(() => dilemmas.dilemmaId),
+  dilemmaId: uuid('dilemma_id').notNull().references(() => dilemmas.dilemmaId),
   chosenOption: varchar('chosen_option').notNull(),
   reasoning: text('reasoning'),
   confidenceScore: decimal('confidence_score'),
@@ -97,6 +97,7 @@ export const users = pgTable('users', {
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
   image: varchar('image'),
   role: varchar('role').default('user'),
+  password: varchar('password'), // For admin users
 });
 
 export const accounts = pgTable('accounts', {

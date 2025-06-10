@@ -1,104 +1,96 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { useProgress } from '@/components/progress-context';
+import { useDilemmaStore } from '@/store/dilemma-store';
 
-interface Dilemma {
-  dilemmaId: string;
-  title: string;
-  scenario: string;
-  choiceA: string;
-  choiceB: string;
-  choiceC: string;
-  choiceD: string;
-  domain: string;
-}
 
-interface Response {
-  dilemmaId: string;
-  chosenOption: string;
-  reasoning: string;
-  responseTime: number;
-  perceivedDifficulty: number;
-}
-
-export default function ExplorePage() {
-  const [dilemmas, setDilemmas] = useState<Dilemma[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [responses, setResponses] = useState<Response[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string>('');
-  const [reasoning, setReasoning] = useState<string>('');
-  const [perceivedDifficulty, setPerceivedDifficulty] = useState<number>(5);
-  const [loading, setLoading] = useState(true);
-  const [startTime, setStartTime] = useState<number>(Date.now());
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+export default function ExplorePage({ params }: { params: Promise<{ uuid: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const { setProgress, hideProgress } = useProgress();
+  
+  // Zustand store
+  const {
+    dilemmas,
+    currentIndex,
+    selectedOption,
+    reasoning,
+    perceivedDifficulty,
+    getCurrentDilemma,
+    getCurrentDilemmaId,
+    getProgress,
+    setDilemmas,
+    setSelectedOption,
+    setReasoning,
+    setPerceivedDifficulty,
+    goToNext,
+    goToPrevious,
+    restoreResponseForIndex
+  } = useDilemmaStore();
+  
+  const loading = dilemmas.length === 0;
+  const currentDilemma = getCurrentDilemma();
 
+  // Load dilemmas on mount or when UUID changes
   useEffect(() => {
-    fetchDilemmas();
-  }, []);
+    const fetchDilemmas = async () => {
+      try {
+        const response = await fetch(`/api/dilemmas/${resolvedParams.uuid}`);
+        const data = await response.json();
+        setDilemmas(data.dilemmas, resolvedParams.uuid);
+      } catch (error) {
+        console.error('Error fetching dilemmas:', error);
+      }
+    };
+    
+    // Only fetch if we don't have dilemmas or if starting UUID doesn't match current
+    if (dilemmas.length === 0 || !dilemmas.some(d => d.dilemmaId === resolvedParams.uuid)) {
+      fetchDilemmas();
+    } else {
+      // We have dilemmas, just update the current index to match the URL
+      const targetIndex = dilemmas.findIndex(d => d.dilemmaId === resolvedParams.uuid);
+      if (targetIndex !== -1 && targetIndex !== currentIndex) {
+        setDilemmas(dilemmas, resolvedParams.uuid);
+        restoreResponseForIndex(targetIndex);
+      }
+    }
+  }, [resolvedParams.uuid, dilemmas, currentIndex, setDilemmas, restoreResponseForIndex]);
 
+  // Update progress when dilemmas or index changes
   useEffect(() => {
     if (dilemmas.length > 0) {
-      setProgress(currentIndex + 1, dilemmas.length);
+      const progress = getProgress();
+      setProgress(progress.current, progress.total);
     }
     return () => {
       hideProgress();
     };
-  }, [currentIndex, dilemmas.length, setProgress, hideProgress]);
+  }, [currentIndex, dilemmas.length, setProgress, hideProgress, getProgress]);
 
+  // Scroll to top when dilemma changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentIndex]);
 
-  const fetchDilemmas = async () => {
-    try {
-      const response = await fetch('/api/dilemmas/random');
-      const data = await response.json();
-      setDilemmas(data.dilemmas);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching dilemmas:', error);
-      setLoading(false);
-    }
-  };
-
   const handleNext = () => {
     if (!selectedOption) return;
 
-    const responseTime = Date.now() - startTime;
-    const newResponse: Response = {
-      dilemmaId: dilemmas[currentIndex].dilemmaId,
-      chosenOption: selectedOption,
-      reasoning,
-      responseTime,
-      perceivedDifficulty,
-    };
-
-    const updatedResponses = [...responses, newResponse];
-    setResponses(updatedResponses);
+    const hasNext = goToNext();
     
-    // Store in localStorage for privacy
-    localStorage.setItem('valuesResponses', JSON.stringify({
-      sessionId,
-      responses: updatedResponses
-    }));
-
-    if (currentIndex < dilemmas.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setSelectedOption('');
-      setReasoning('');
-      setPerceivedDifficulty(5);
-      setStartTime(Date.now());
+    if (hasNext) {
+      // Update URL to current dilemma without page reload
+      const newDilemmaId = getCurrentDilemmaId();
+      if (newDilemmaId) {
+        router.push(`/explore/${newDilemmaId}`, { scroll: false });
+      }
     } else {
       // All dilemmas completed, go to results
       router.push('/results');
@@ -107,13 +99,12 @@ export default function ExplorePage() {
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      // Restore previous response
-      const prevResponse = responses[currentIndex - 1];
-      if (prevResponse) {
-        setSelectedOption(prevResponse.chosenOption);
-        setReasoning(prevResponse.reasoning);
-        setPerceivedDifficulty(prevResponse.perceivedDifficulty);
+      goToPrevious();
+      
+      // Update URL to current dilemma without page reload
+      const newDilemmaId = getCurrentDilemmaId();
+      if (newDilemmaId) {
+        router.push(`/explore/${newDilemmaId}`, { scroll: false });
       }
     }
   };
@@ -129,7 +120,7 @@ export default function ExplorePage() {
     );
   }
 
-  if (dilemmas.length === 0) {
+  if (!loading && !currentDilemma) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-destructive">Error loading dilemmas. Please try again.</p>
@@ -137,7 +128,9 @@ export default function ExplorePage() {
     );
   }
 
-  const currentDilemma = dilemmas[currentIndex];
+  if (!currentDilemma) {
+    return null; // Still loading
+  }
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">

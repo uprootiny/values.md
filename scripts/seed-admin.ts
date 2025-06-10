@@ -3,6 +3,9 @@ import { users } from '../src/lib/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 async function seedAdmin() {
   try {
     const adminEmail = 'admin@values.md';
@@ -28,8 +31,8 @@ async function seedAdmin() {
       id: 'admin-user-1',
       name: 'Admin',
       email: adminEmail,
-      // We'll store the hashed password in a custom field or use credentials provider
       role: 'admin',
+      password: hashedPassword,
     });
     
     console.log('Admin user created successfully');

@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
+import bcrypt from 'bcryptjs'
 
 export const authConfig: NextAuthOptions = {
   providers: [
@@ -38,8 +39,8 @@ export const authConfig: NextAuthOptions = {
           
           const foundUser = user[0]
           
-          // For admin, check against environment password
-          if (foundUser.role === 'admin' && credentials.password === process.env.ADMIN_PASSWORD) {
+          // For admin, check against hashed database password
+          if (foundUser.role === 'admin' && foundUser.password && await bcrypt.compare(credentials.password, foundUser.password)) {
             return {
               id: foundUser.id,
               name: foundUser.name,

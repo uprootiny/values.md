@@ -42,7 +42,7 @@ export default function Home() {
           </Card>
           
           <Button asChild size="lg" className="text-lg py-6 px-8">
-            <Link href="/explore">
+            <Link href="/api/dilemmas/random">
               Start Exploring Your Values
             </Link>
           </Button>

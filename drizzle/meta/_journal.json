@@ -22,6 +22,20 @@
       "when": 1749582329578,
       "tag": "0002_complete_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749584853159,
+      "tag": "0003_bright_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1749585413155,
+      "tag": "0004_public_magik",
+      "breakpoints": true
     }
   ]
 }

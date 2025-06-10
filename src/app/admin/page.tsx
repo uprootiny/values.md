@@ -20,6 +20,10 @@ export default function AdminPage() {
   const [generating, setGenerating] = useState(false);
   const [generatedDilemma, setGeneratedDilemma] = useState<GeneratedDilemma | null>(null);
   const [error, setError] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +41,42 @@ export default function AdminPage() {
       }
     } catch (error) {
       setError('Authentication failed');
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangingPassword(true);
+    setPasswordChangeMessage('');
+    setError('');
+    
+    try {
+      const response = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to change password');
+        return;
+      }
+
+      setPasswordChangeMessage(data.message);
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (error) {
+      setError('Failed to change password. Please try again.');
+      console.error('Error:', error);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -144,7 +184,47 @@ export default function AdminPage() {
             </Button>
           </CardHeader>
           
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8">
+            {/* Password Change Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Change Admin Password</h2>
+              <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={changingPassword}
+                  variant="default"
+                >
+                  {changingPassword ? 'Changing...' : 'Change Password'}
+                </Button>
+              </form>
+              {passwordChangeMessage && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm">{passwordChangeMessage}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Generate Dilemma Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Generate New Dilemma</h2>
               <Button
@@ -154,10 +234,11 @@ export default function AdminPage() {
               >
                 {generating ? 'Generating...' : 'Generate Dilemma'}
               </Button>
-              {error && (
-                <p className="text-destructive">{error}</p>
-              )}
             </div>
+            
+            {error && (
+              <p className="text-destructive">{error}</p>
+            )}
 
             {generatedDilemma && (
               <Card>

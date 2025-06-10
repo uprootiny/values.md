@@ -3,6 +3,7 @@ import { db } from '../src/lib/db';
 import { frameworks, motifs, dilemmas } from '../src/lib/schema';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { randomUUID } from 'crypto';
 
 function parseCSV(csvContent: string): Record<string, string>[] {
   const lines = csvContent.trim().split('\n');
@@ -94,7 +95,7 @@ async function seedDilemmas() {
     if (!row.dilemma_id) continue; // Skip empty rows
     
     await db.insert(dilemmas).values({
-      dilemmaId: row.dilemma_id,
+      dilemmaId: randomUUID(), // Generate new UUID instead of using CSV ID
       domain: row.domain,
       generatorType: row.generator_type,
       difficulty: row.difficulty ? parseInt(row.difficulty) : null,
