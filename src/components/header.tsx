@@ -19,7 +19,7 @@ import { ProgressBar } from '@/components/progress-bar';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'About', href: '/about' },
-  { name: 'Documentation', href: '/docs' },
+  { name: 'Docs', href: '/docs' },
   { name: 'Blog', href: '/blog' },
   { name: 'Research', href: '/research' },
 ];
@@ -29,7 +29,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
