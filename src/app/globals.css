@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @variant dark (&:is(.dark *));
 
@@ -62,3 +64,4 @@
     color: theme('colors.foreground');
   }
 }
+

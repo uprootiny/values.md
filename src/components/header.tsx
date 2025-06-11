@@ -19,6 +19,8 @@ import { ProgressBar } from '@/components/progress-bar';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'About', href: '/about' },
+  { name: 'Documentation', href: '/docs' },
+  { name: 'Blog', href: '/blog' },
   { name: 'Research', href: '/research' },
 ];
 
