@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
         chosenOption: response.chosenOption,
         reasoning: response.reasoning,
         responseTime: response.responseTime,
+        perceivedDifficulty: response.perceivedDifficulty,
       });
     }
 

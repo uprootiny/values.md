@@ -9,7 +9,18 @@ import { Badge } from '@/components/ui/badge';
 interface ValuesResult {
   valuesMarkdown: string;
   motifAnalysis: Record<string, number>;
-  topMotifs: string[];
+  detailedAnalysis: Array<{
+    motifId: string;
+    name: string;
+    category: string;
+    count: number;
+    weight: number;
+  }>;
+  frameworkAlignment: Array<{
+    framework: string;
+    score: number;
+  }>;
+  domainPreferences: Record<string, number>;
 }
 
 export default function ResultsPage() {
@@ -101,21 +112,68 @@ export default function ResultsPage() {
           </CardHeader>
           
           <CardContent className="space-y-8">
-            {/* Motif Analysis */}
+            {/* Enhanced Motif Analysis */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Your Moral Framework</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {results && Object.entries(results.motifAnalysis)
-                  .sort(([,a], [,b]) => b - a)
-                  .slice(0, 6)
-                  .map(([motif, count]) => (
-                    <div key={motif} className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span className="font-medium">{motif}</span>
-                      <Badge variant="default">{count}</Badge>
+              <div className="space-y-4">
+                {results?.detailedAnalysis?.slice(0, 5).map((motif) => (
+                  <div key={motif.motifId} className="p-4 bg-muted rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className="font-semibold">{motif.name}</span>
+                        <Badge variant="outline" className="ml-2">{motif.category}</Badge>
+                      </div>
+                      <Badge variant="default">{motif.count} responses</Badge>
                     </div>
-                  ))}
+                    <div className="text-sm text-muted-foreground">
+                      Weight: {motif.weight} | ID: {motif.motifId}
+                    </div>
+                  </div>
+                )) || (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {results && Object.entries(results.motifAnalysis)
+                      .sort(([,a], [,b]) => b - a)
+                      .slice(0, 6)
+                      .map(([motif, count]) => (
+                        <div key={motif} className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span className="font-medium">{motif}</span>
+                          <Badge variant="default">{count}</Badge>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Framework Alignment */}
+            {results?.frameworkAlignment && results.frameworkAlignment.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Ethical Framework Alignment</h2>
+                <div className="space-y-2">
+                  {results.frameworkAlignment.map((fw, index) => (
+                    <div key={fw.framework} className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                      <span className="font-medium">{fw.framework.replace(/_/g, ' ')}</span>
+                      <Badge variant="secondary">Strength: {Math.round(fw.score)}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Domain Preferences */}
+            {results?.domainPreferences && Object.keys(results.domainPreferences).length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Domain Engagement</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {Object.entries(results.domainPreferences).map(([domain, count]) => (
+                    <div key={domain} className="text-center p-2 bg-muted rounded">
+                      <div className="font-medium capitalize">{domain}</div>
+                      <div className="text-sm text-muted-foreground">{count} responses</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Values Markdown Preview */}
             <div>

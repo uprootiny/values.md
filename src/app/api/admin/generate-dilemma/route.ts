@@ -32,12 +32,8 @@ export async function POST(request: NextRequest) {
       difficulty
     );
 
-    // Create unique ID
-    const dilemmaId = `DM${Date.now().toString().slice(-6)}`;
-
-    // Save to database
-    await db.insert(dilemmas).values({
-      dilemmaId,
+    // Save to database (UUID will be auto-generated)
+    const insertResult = await db.insert(dilemmas).values({
       domain,
       generatorType: 'ai_generated',
       difficulty,
@@ -56,11 +52,11 @@ export async function POST(request: NextRequest) {
       validationScore: null,
       realismScore: null,
       tensionStrength: null,
-    });
+    }).returning({ dilemmaId: dilemmas.dilemmaId });
 
     return NextResponse.json({
       success: true,
-      dilemmaId,
+      dilemmaId: insertResult[0]?.dilemmaId,
       dilemma: generatedDilemma
     });
   } catch (error) {
