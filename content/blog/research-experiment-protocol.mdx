@@ -1,0 +1,167 @@
+---
+title: 'Values.md Research Experiment: Do Personal Value Profiles Improve Human-AI Alignment?'
+publishedAt: '2025-06-14'
+summary: 'Our comprehensive protocol for testing whether personalized values.md files enhance human-AI interaction quality, consistency, and alignment at personal scale.'
+---
+
+# The Values.md Research Experiment
+
+## Hypothesis
+
+**Primary Hypothesis:** Personalized `values.md` files significantly improve human-AI interaction quality by providing LLMs with explicit ethical frameworks that align AI decision-making with individual moral reasoning patterns.
+
+**Secondary Hypotheses:**
+1. LLMs with access to `values.md` will make decisions more consistent with user preferences than baseline prompting
+2. Decision quality (as measured by user satisfaction) will increase when LLMs reference personal ethical frameworks
+3. The effect will be measurable across different AI models and decision domains
+4. Values.md reduces the need for repeated clarification and context-setting in conversations
+
+## Research Protocol
+
+### Phase 1: Data Collection & Profile Generation
+
+#### Participant Journey
+1. **Ethical Dilemma Sequence**: Participants complete 12 carefully designed ethical dilemmas spanning multiple domains:
+   - Technology & Privacy
+   - Medical & Healthcare  
+   - Workplace & Professional
+   - Social & Community
+   - Environmental & Sustainability
+
+2. **Response Capture**: For each dilemma, we collect:
+   - Chosen option (A/B/C/D)
+   - Written reasoning (optional but encouraged)
+   - Perceived difficulty rating (1-10)
+   - Response time (milliseconds)
+   - Demographic context markers
+
+3. **Values.md Generation**: Our statistical analysis engine processes responses to generate personalized ethical profiles including:
+   - Primary moral frameworks (utilitarian, deontological, virtue ethics, etc.)
+   - Motif frequency analysis (UTIL_CALC, DUTY_CARE, HARM_MINIMIZE, etc.)
+   - Consistency metrics and confidence scores
+   - Decision pattern examples with reasoning
+   - Explicit AI instruction formatting
+
+### Phase 2: Controlled AI Testing
+
+#### Experimental Design
+**Control Group**: LLMs receive standard prompts without values.md context
+**Treatment Group**: LLMs receive identical prompts + participant's values.md in system context
+
+#### AI Model Battery
+We test multiple LLM architectures to ensure findings generalize:
+- **Claude 3.5 Sonnet** (Anthropic)
+- **GPT-4 Turbo** (OpenAI)  
+- **Gemini Pro** (Google)
+- **Llama 3 70B** (Meta)
+- **Command R+** (Cohere)
+
+#### Decision Scenarios
+Each AI model tackles identical sets of:
+1. **Personal decision scenarios** matching participant's dilemma domains
+2. **Cross-domain ethical questions** to test framework transfer
+3. **Edge case dilemmas** designed to reveal value conflicts
+4. **Multi-stakeholder problems** requiring complex moral reasoning
+
+### Phase 3: Assessment & Comparison
+
+#### Quantitative Metrics
+- **Alignment Score**: How closely AI decisions match participant's predicted choices
+- **Consistency Index**: Variance in AI responses across similar scenarios  
+- **Explanation Quality**: Coherence and relevance of AI reasoning
+- **Framework Adherence**: How well AI follows stated ethical principles
+
+#### Qualitative Analysis
+- **User Satisfaction**: Participant ratings of AI decision quality
+- **Preference Matching**: Binary choice validation between control/treatment responses
+- **Value Preservation**: Assessment of whether AI maintains participant's core principles
+- **Context Appropriateness**: Evaluation of situational ethical reasoning
+
+## Methodology Implementation
+
+### Automated Experiment Infrastructure
+
+#### Data Management
+```
+/experiments/
+├── participants/           # Anonymous participant profiles
+│   ├── {session-id}/
+│   │   ├── responses.json     # Raw dilemma responses
+│   │   ├── values.md          # Generated profile
+│   │   ├── metadata.json     # Demographics, timestamps
+│   │   └── ai_tests/         # Model comparison results
+├── scenarios/             # Test scenario library
+│   ├── personal/            # Tailored to participant domains
+│   ├── cross_domain/        # Generalization tests
+│   └── edge_cases/          # Value conflict scenarios
+├── models/               # AI model configurations
+└── results/              # Aggregated analysis data
+```
+
+#### Experimental Control System
+- **Scenario Generator**: Creates matched test cases across control/treatment groups
+- **Model Orchestrator**: Executes identical prompts across all AI systems
+- **Response Validator**: Ensures consistent data format and quality
+- **Progress Tracker**: Real-time experiment coverage and completion status
+
+#### Replicability Framework
+- **Version Control**: All prompts, scenarios, and configurations tracked in git
+- **Environment Isolation**: Containerized execution prevents configuration drift
+- **Deterministic Seeding**: Reproducible randomization for scenario selection
+- **Audit Logging**: Complete execution trace for result verification
+
+### Statistical Analysis Pipeline
+
+#### Comparative Analysis
+1. **Within-Participant**: Compare control vs. treatment AI responses for same individual
+2. **Between-Models**: Assess which AI architectures benefit most from values.md
+3. **Cross-Domain**: Measure framework transfer effectiveness
+4. **Longitudinal**: Track consistency improvements over interaction history
+
+#### Power Analysis & Sample Size
+- **Effect Size Target**: Cohen's d ≥ 0.5 (medium effect)
+- **Statistical Power**: 80% minimum
+- **Significance Level**: α = 0.05
+- **Estimated N**: 200+ participants for adequate power across subgroups
+
+## Data Privacy & Ethics
+
+### Privacy Protection
+- **Anonymous Sessions**: No personal identifiers stored with responses
+- **Voluntary Participation**: Explicit consent for research data usage
+- **Data Minimization**: Only collect variables relevant to hypotheses
+- **Secure Storage**: Encrypted databases with access controls
+
+### Research Ethics
+- **IRB Approval**: Formal review for human subjects research
+- **Informed Consent**: Clear explanation of study purpose and data usage
+- **Withdrawal Rights**: Participants can remove data at any time
+- **Bias Mitigation**: Diverse scenario sets and demographic representation
+
+## Expected Outcomes & Impact
+
+### Validation Criteria
+**Success Metrics:**
+- ≥15% improvement in alignment scores (treatment vs. control)
+- ≥20% reduction in response variance within participants
+- ≥70% user preference for values.md-informed AI responses
+- Statistically significant effects across ≥3 AI model families
+
+### Broader Implications
+1. **Personal AI Alignment**: Evidence for scalable individual preference learning
+2. **Ethical AI Development**: Framework for incorporating human values in LLM training
+3. **Human-Computer Interaction**: New paradigm for context-aware AI systems
+4. **Digital Ethics**: Practical tool for value-aligned technology design
+
+## Experimental Status
+
+**Current Phase**: Infrastructure Development & Pilot Testing
+**Participant Recruitment**: Q3 2025  
+**Data Collection**: Q4 2025 - Q1 2026
+**Analysis & Publication**: Q2 2026
+
+---
+
+This research represents a novel approach to personalizing AI alignment at scale. By empirically testing whether explicit value profiles improve human-AI interaction, we aim to contribute both practical tools and theoretical insights to the growing field of AI ethics and alignment research.
+
+*Want to participate in our research? [Join our study](/research) to contribute to the future of ethical AI.*
