@@ -4,6 +4,7 @@ import { authConfig } from '@/lib/auth';
 import { openRouter } from '@/lib/openrouter';
 import { db } from '@/lib/db';
 import { dilemmas } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,16 +25,24 @@ export async function POST(request: NextRequest) {
       difficulty = 7 
     } = body;
 
-    // Generate dilemma using OpenRouter
+    // Get existing dilemmas to avoid duplication
+    const existingDilemmas = await db
+      .select({ title: dilemmas.title })
+      .from(dilemmas)
+      .where(eq(dilemmas.domain, domain))
+      .limit(20);
+
+    // Generate dilemma using improved OpenRouter
     const generatedDilemma = await openRouter.generateDilemma(
       frameworks,
       motifs,
       domain,
-      difficulty
+      difficulty,
+      existingDilemmas.map(d => d.title)
     );
 
-    // Save to database (UUID will be auto-generated)
-    const insertResult = await db.insert(dilemmas).values({
+    // Save to database with enhanced metadata (let DB generate UUID)
+    const [savedDilemma] = await db.insert(dilemmas).values({
       domain,
       generatorType: 'ai_generated',
       difficulty,
@@ -48,15 +57,16 @@ export async function POST(request: NextRequest) {
       choiceD: generatedDilemma.choices[3]?.text || '',
       choiceDMotif: generatedDilemma.choices[3]?.motif || '',
       targetMotifs: motifs.join(','),
-      culturalContext: 'western_liberal',
+      stakeholders: generatedDilemma.stakeholders.join(','),
+      culturalContext: generatedDilemma.culturalContext,
       validationScore: null,
       realismScore: null,
-      tensionStrength: null,
+      tensionStrength: generatedDilemma.tensionStrength.toString(),
     }).returning({ dilemmaId: dilemmas.dilemmaId });
 
     return NextResponse.json({
       success: true,
-      dilemmaId: insertResult[0]?.dilemmaId,
+      dilemmaId: savedDilemma.dilemmaId,
       dilemma: generatedDilemma
     });
   } catch (error) {

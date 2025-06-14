@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedDilemma, setGeneratedDilemma] = useState<GeneratedDilemma | null>(null);
+  const [generationType, setGenerationType] = useState<'ai' | 'combinatorial'>('ai');
   const [error, setError] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -85,17 +86,30 @@ export default function AdminPage() {
     setError('');
     
     try {
-      const response = await fetch('/api/admin/generate-dilemma', {
+      const endpoint = generationType === 'ai' 
+        ? '/api/admin/generate-dilemma' 
+        : '/api/admin/generate-combinatorial';
+      
+      const body = generationType === 'ai' 
+        ? {
+            frameworks: ['UTIL_CALC', 'DEONT_ABSOLUTE'],
+            motifs: ['UTIL_CALC', 'HARM_MINIMIZE'],
+            domain: 'technology',
+            difficulty: 7,
+          }
+        : {
+            domain: 'technology',
+            difficulty: 7,
+            targetMotifs: ['UTIL_CALC', 'HARM_MINIMIZE'],
+            count: 1,
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          frameworks: ['UTIL_CALC', 'DEONT_ABSOLUTE'],
-          motifs: ['UTIL_CALC', 'HARM_MINIMIZE'],
-          domain: 'technology',
-          difficulty: 7,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -107,7 +121,12 @@ export default function AdminPage() {
       }
 
       const data = await response.json();
-      setGeneratedDilemma(data.dilemma);
+      
+      if (generationType === 'ai') {
+        setGeneratedDilemma(data.dilemma);
+      } else {
+        setGeneratedDilemma(data.dilemmas[0]); // Take first generated dilemma
+      }
     } catch (error) {
       setError('Failed to generate dilemma. Please try again.');
       console.error('Error:', error);
@@ -227,13 +246,42 @@ export default function AdminPage() {
             {/* Generate Dilemma Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Generate New Dilemma</h2>
-              <Button
-                onClick={generateDilemma}
-                disabled={generating}
-                variant="default"
-              >
-                {generating ? 'Generating...' : 'Generate Dilemma'}
-              </Button>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Generation Method</Label>
+                  <div className="flex gap-4">
+                    <Button
+                      variant={generationType === 'ai' ? 'default' : 'outline'}
+                      onClick={() => setGenerationType('ai')}
+                      disabled={generating}
+                    >
+                      AI-Generated (LLM)
+                    </Button>
+                    <Button
+                      variant={generationType === 'combinatorial' ? 'default' : 'outline'}
+                      onClick={() => setGenerationType('combinatorial')}
+                      disabled={generating}
+                    >
+                      Combinatorial (Templates)
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {generationType === 'ai' 
+                      ? 'Uses Claude to generate novel ethical dilemmas with detailed prompting'
+                      : 'Uses pre-defined templates with variable substitution for consistent quality'
+                    }
+                  </p>
+                </div>
+                
+                <Button
+                  onClick={generateDilemma}
+                  disabled={generating}
+                  variant="default"
+                >
+                  {generating ? 'Generating...' : `Generate ${generationType === 'ai' ? 'AI' : 'Template'} Dilemma`}
+                </Button>
+              </div>
             </div>
             
             {error && (

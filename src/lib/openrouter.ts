@@ -56,7 +56,8 @@ export class OpenRouterService {
     frameworks: string[],
     motifs: string[],
     domain: string,
-    difficulty: number
+    difficulty: number,
+    existingDilemmas?: string[]
   ): Promise<{
     title: string;
     scenario: string;
@@ -64,45 +65,116 @@ export class OpenRouterService {
       text: string;
       motif: string;
     }[];
+    stakeholders: string[];
+    culturalContext: string;
+    tensionStrength: number;
   }> {
+    // Get framework and motif details from database for better prompting
+    const frameworkDetails = await this.getFrameworkDetails(frameworks);
+    const motifDetails = await this.getMotifDetails(motifs);
+    
     const systemPrompt = `You are an expert in moral philosophy and ethical reasoning. Generate a challenging ethical dilemma for a research platform studying human values.
 
-Requirements:
+CONTEXT:
 - Domain: ${domain}
-- Difficulty: ${difficulty}/10
-- Target frameworks: ${frameworks.join(', ')}
-- Target motifs: ${motifs.join(', ')}
+- Difficulty: ${difficulty}/10 (where 10 is extremely challenging moral philosophy)
+- Target ethical frameworks: ${frameworkDetails.map(f => `${f.name} (${f.tradition}): ${f.keyPrinciple}`).join('; ')}
+- Target moral motifs: ${motifDetails.map(m => `${m.name}: ${m.description}`).join('; ')}
+${existingDilemmas ? `\n- Avoid these existing scenarios: ${existingDilemmas.join('; ')}` : ''}
 
-The dilemma should:
-1. Present a realistic scenario with genuine moral tension
-2. Have exactly 4 distinct choices that map to different moral motifs
-3. Be culturally sensitive and appropriate for research
-4. Generate meaningful debate between different ethical approaches
-5. Be relevant to modern AI/technology contexts when applicable
+DILEMMA REQUIREMENTS:
+1. Present a realistic, contemporary scenario with genuine moral tension
+2. Create exactly 4 distinct choices, each clearly mapping to different moral motifs
+3. Ensure choices represent fundamentally different ethical approaches
+4. Include sufficient detail for meaningful moral reasoning
+5. Consider cultural sensitivity and research ethics
+6. Generate significant philosophical tension between the options
 
-Response format should be JSON:
+CHOICE MAPPING GUIDE:
+- Each choice should embody a specific moral motif from the target list
+- Choices should create clear ethical conflicts (e.g., individual vs collective good)
+- Avoid choices that are obviously "wrong" - all should be defensible
+- Include concrete actions, not abstract principles
+
+Response format (valid JSON only):
 {
-  "title": "Brief descriptive title",
-  "scenario": "Detailed scenario description (2-3 sentences)",
+  "title": "Specific, engaging title (max 60 chars)",
+  "scenario": "Detailed scenario with context, stakeholders, and constraints (150-250 words)",
   "choices": [
-    {"text": "Choice A description", "motif": "PRIMARY_MOTIF"},
-    {"text": "Choice B description", "motif": "PRIMARY_MOTIF"},
-    {"text": "Choice C description", "motif": "PRIMARY_MOTIF"},
-    {"text": "Choice D description", "motif": "PRIMARY_MOTIF"}
-  ]
+    {"text": "Concrete action option A (40-80 words)", "motif": "EXACT_MOTIF_ID"},
+    {"text": "Concrete action option B (40-80 words)", "motif": "EXACT_MOTIF_ID"},
+    {"text": "Concrete action option C (40-80 words)", "motif": "EXACT_MOTIF_ID"},
+    {"text": "Concrete action option D (40-80 words)", "motif": "EXACT_MOTIF_ID"}
+  ],
+  "stakeholders": ["list", "of", "affected", "parties"],
+  "culturalContext": "western_liberal|collectivist|universal|religious",
+  "tensionStrength": 0.8
 }`;
 
-    const userPrompt = `Generate a new ethical dilemma with the specified parameters.`;
+    const userPrompt = `Generate a novel ethical dilemma that would challenge thoughtful decision-makers and reveal their underlying moral frameworks. Focus on ${domain} domain scenarios that modern people actually encounter.`;
 
     const response = await this.generateCompletion([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
-    ]);
+    ], 'anthropic/claude-3.5-sonnet', 3000);
 
     try {
-      return JSON.parse(response);
+      const parsed = JSON.parse(response);
+      
+      // Validate the response structure
+      if (!parsed.title || !parsed.scenario || !parsed.choices || parsed.choices.length !== 4) {
+        throw new Error('Invalid dilemma structure');
+      }
+      
+      // Ensure all choices have valid motifs
+      for (const choice of parsed.choices) {
+        if (!choice.text || !choice.motif) {
+          throw new Error('Invalid choice structure');
+        }
+      }
+      
+      return {
+        ...parsed,
+        stakeholders: parsed.stakeholders || [],
+        culturalContext: parsed.culturalContext || 'western_liberal',
+        tensionStrength: parsed.tensionStrength || 0.7
+      };
     } catch (error) {
-      throw new Error(`Failed to parse dilemma JSON: ${error}`);
+      throw new Error(`Failed to parse dilemma JSON: ${error}. Response: ${response}`);
+    }
+  }
+
+  private async getFrameworkDetails(frameworkIds: string[]) {
+    const { db } = await import('./db');
+    const { frameworks } = await import('./schema');
+    const { inArray } = await import('drizzle-orm');
+    
+    if (frameworkIds.length === 0) return [];
+    
+    try {
+      return await db
+        .select()
+        .from(frameworks)
+        .where(inArray(frameworks.frameworkId, frameworkIds));
+    } catch {
+      return []; // Fallback for missing data
+    }
+  }
+
+  private async getMotifDetails(motifIds: string[]) {
+    const { db } = await import('./db');
+    const { motifs } = await import('./schema');
+    const { inArray } = await import('drizzle-orm');
+    
+    if (motifIds.length === 0) return [];
+    
+    try {
+      return await db
+        .select()
+        .from(motifs)
+        .where(inArray(motifs.motifId, motifIds));
+    } catch {
+      return []; // Fallback for missing data
     }
   }
 
