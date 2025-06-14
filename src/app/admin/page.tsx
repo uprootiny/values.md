@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Activity, TestTube, Map, ExternalLink } from 'lucide-react';
+import { Activity, TestTube, Map, ExternalLink, Zap } from 'lucide-react';
 
 interface GeneratedDilemma {
   title: string;
@@ -208,8 +208,8 @@ export default function AdminPage() {
           <CardContent className="space-y-8">
             {/* Technical Dashboards Section */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">System Monitoring</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h2 className="text-xl font-semibold">System Monitoring & Research</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Link href="/health">
                   <Card className="cursor-pointer hover:bg-accent transition-colors">
                     <CardContent className="flex items-center space-x-3 p-4">
@@ -243,6 +243,19 @@ export default function AdminPage() {
                       <div>
                         <p className="font-medium">Project Map</p>
                         <p className="text-sm text-muted-foreground">Architecture & dataflow</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </CardContent>
+                  </Card>
+                </Link>
+                
+                <Link href="/admin/experiment">
+                  <Card className="cursor-pointer hover:bg-accent transition-colors border-orange-200 bg-orange-50">
+                    <CardContent className="flex items-center space-x-3 p-4">
+                      <Zap className="h-5 w-5 text-orange-500" />
+                      <div>
+                        <p className="font-medium">LLM Experiments</p>
+                        <p className="text-sm text-muted-foreground">Run alignment tests</p>
                       </div>
                       <ExternalLink className="h-4 w-4 ml-auto" />
                     </CardContent>
