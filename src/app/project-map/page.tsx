@@ -206,121 +206,191 @@ export default function ProjectMap() {
             </CardContent>
           </Card>
 
-          {/* Architecture Diagram */}
+          {/* API Dataflow with Real Parameters */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>System Architecture Flow</CardTitle>
+              <CardTitle>🔄 Real API Dataflow & Request Parameters</CardTitle>
+              <p className="text-sm text-muted-foreground">Live system interactions with actual data structures</p>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* User Journey */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* User Journey API Flow */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">👤 User Journey</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Landing Page</span>
+                  <h3 className="font-semibold text-lg border-b pb-2">👤 User API Journey</h3>
+                  
+                  <div className="bg-slate-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-green-700">GET /api/dilemmas/random</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      Response: {`{ dilemmaId: "uuid-123", redirect: "/explore/uuid-123" }`}
                     </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Start Exploring</div>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-blue-700">GET /api/dilemmas/[uuid]</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`{
+  title: "AI Medical Diagnosis",
+  scenario: "A hospital AI...",
+  choiceA: "Prioritize accuracy",
+  choiceAMotif: "UTIL_CALC",
+  difficulty: 7,
+  stakeholders: ["patients","doctors"]
+}`}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Random Dilemma API</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-purple-700">POST /api/responses</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`Request: {
+  sessionId: "sess_abc123",
+  dilemmaId: "uuid-123", 
+  chosenOption: "a",
+  reasoning: "Maximum benefit...",
+  responseTime: 45000,
+  perceivedDifficulty: 8
+}`}
                     </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Present Scenario</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">User Response System</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ 12 Dilemmas Complete</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Statistical Analysis</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Generate Profile</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Values.md Output</span>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-orange-700">POST /api/generate-values</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`Request: { sessionId: "sess_abc123" }
+Response: {
+  valuesMarkdown: "# My Values...",
+  motifAnalysis: { "UTIL_CALC": 5, "DUTY_CARE": 2 },
+  frameworkAlignment: { "utilitarian": 7 },
+  statisticalAnalysis: { consistencyScore: 0.85 }
+}`}
                     </div>
                   </div>
                 </div>
 
-                {/* Data Flow */}
+                {/* Admin API Flow */}
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">📊 Data Flow</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <span className="text-sm">Dilemma Templates</span>
+                  <h3 className="font-semibold text-lg border-b pb-2">🛡️ Admin API Flow</h3>
+                  
+                  <div className="bg-red-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-red-700">POST /api/auth/[...nextauth]</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`Request: {
+  email: "admin@values.md",
+  password: "hashed_password"
+}
+Response: {
+  user: { role: "admin" },
+  token: "jwt_session_token"
+}`}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm">OpenRouter LLM</span>
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-green-700">POST /api/admin/generate-dilemma</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`Request: {
+  frameworks: ["UTIL_CALC","DEONT_ABSOLUTE"],
+  motifs: ["UTIL_CALC","HARM_MINIMIZE"],
+  domain: "technology",
+  difficulty: 7
+}
+Response: {
+  success: true,
+  dilemmaId: "uuid-456",
+  dilemma: { title: "...", choices: [...] }
+}`}
                     </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Generate Novel Content</div>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-blue-700">POST /api/admin/generate-combinatorial</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`Request: {
+  domain: "privacy",
+  difficulty: 6,
+  targetMotifs: ["UTIL_CALC"],
+  count: 1
+}
+Response: {
+  success: true,
+  count: 1,
+  dilemmas: [{ template: "corp_data", vars: {...} }]
+}`}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Database Storage</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Persist Responses</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Zustand Store</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Local Caching</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Analysis Engine</span>
+                  </div>
+
+                  <div className="bg-yellow-50 p-4 rounded-lg space-y-3">
+                    <div className="font-medium text-yellow-700">External: OpenRouter API</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded border">
+                      {`POST https://openrouter.ai/api/v1/chat/completions
+Headers: {
+  Authorization: "Bearer sk-or-v1-...",
+  X-Title: "Values.md Research Platform"
+}
+Body: {
+  model: "anthropic/claude-3.5-sonnet",
+  messages: [system_prompt, user_prompt],
+  max_tokens: 3000
+}`}
                     </div>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Admin Flow */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">🛡️ Admin Flow</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">NextAuth Login</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Verify Credentials</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Admin Dashboard</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Select Generation Method</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                      <span className="text-sm">Combinatorial Gen</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <span className="text-sm">AI-Guided Gen</span>
-                    </div>
-                    <div className="ml-2 border-l-2 border-gray-200 pl-4 py-1">
-                      <div className="text-xs text-muted-foreground">↓ Quality Control</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm">Database Storage</span>
-                    </div>
+          {/* Database Schema & Connections */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>🗄️ Database Schema & Connections</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-blue-800">dilemmas</h4>
+                  <div className="text-xs space-y-1">
+                    <div>• dilemmaId (UUID)</div>
+                    <div>• title, scenario</div>
+                    <div>• choiceA-D + motifs</div>
+                    <div>• domain, difficulty</div>
+                    <div>• stakeholders</div>
+                    <div>• tensionStrength</div>
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-green-800">userResponses</h4>
+                  <div className="text-xs space-y-1">
+                    <div>• responseId (UUID)</div>
+                    <div>• sessionId</div>
+                    <div>• dilemmaId (FK)</div>
+                    <div>• chosenOption (a-d)</div>
+                    <div>• reasoning (text)</div>
+                    <div>• responseTime (ms)</div>
+                  </div>
+                </div>
+                
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-purple-800">motifs</h4>
+                  <div className="text-xs space-y-1">
+                    <div>• motifId</div>
+                    <div>• name, description</div>
+                    <div>• category, subcategory</div>
+                    <div>• conflictsWith</div>
+                    <div>• synergiesWith</div>
+                    <div>• weight (0-1)</div>
+                  </div>
+                </div>
+                
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-orange-800">frameworks</h4>
+                  <div className="text-xs space-y-1">
+                    <div>• frameworkId</div>
+                    <div>• name, tradition</div>
+                    <div>• keyPrinciple</div>
+                    <div>• decisionMethod</div>
+                    <div>• historicalFigure</div>
+                    <div>• modernApplication</div>
                   </div>
                 </div>
               </div>
@@ -369,11 +439,57 @@ export default function ProjectMap() {
                   <div>
                     <p className="text-xs font-medium mb-2">Dependencies:</p>
                     <div className="flex flex-wrap gap-1">
-                      {component.dependencies.map((dep, depIndex) => (
-                        <Badge key={depIndex} variant="outline" className="text-xs">
-                          {dep}
-                        </Badge>
-                      ))}
+                      {component.dependencies.map((dep, depIndex) => {
+                        const getDepLink = (depName: string) => {
+                          const links: Record<string, string> = {
+                            'Database': '#database-schema',
+                            'OpenRouter API': 'https://openrouter.ai/docs',
+                            'Template Engine': '/src/lib/dilemma-generator.ts',
+                            'Zustand Store': '/src/store/dilemma-store.ts',
+                            'Local Storage': '#browser-localstorage',
+                            'NextAuth.js': '/src/lib/auth.ts',
+                            'Generation APIs': '/src/app/api/admin/',
+                            'Motif Library': '/src/lib/schema.ts#motifs',
+                            'Framework Mapping': '/src/lib/schema.ts#frameworks',
+                            'Neon Cloud': 'https://neon.tech',
+                            'Connection Pool': '/src/lib/db.ts',
+                            'JWT Tokens': '#nextauth-sessions',
+                            'bcrypt': '/src/lib/auth.ts#password-hashing',
+                            'API Key': '#environment-variables',
+                            'Rate Limiting': '#openrouter-limits',
+                            'Claude 3.5 Sonnet': 'https://docs.anthropic.com/claude/reference',
+                            'Header': '/src/components/header.tsx',
+                            'Theme Provider': '/src/components/theme-provider.tsx'
+                          };
+                          return links[depName] || '#';
+                        };
+                        
+                        const link = getDepLink(dep);
+                        const isExternal = link.startsWith('http');
+                        
+                        return (
+                          <Badge 
+                            key={depIndex} 
+                            variant="outline" 
+                            className="text-xs cursor-pointer hover:bg-accent transition-colors"
+                            onClick={() => {
+                              if (isExternal) {
+                                window.open(link, '_blank');
+                              } else if (link.startsWith('#')) {
+                                // Scroll to section or show tooltip
+                                console.log('Internal reference:', link);
+                              } else {
+                                // Show file path info
+                                alert(`File location: ${link}`);
+                              }
+                            }}
+                            title={isExternal ? `External: ${link}` : `File: ${link}`}
+                          >
+                            {dep}
+                            {isExternal && <span className="ml-1">↗</span>}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -385,48 +501,103 @@ export default function ProjectMap() {
         {/* Technology Stack */}
         <Card className="mt-8">
           <CardHeader>
-            <CardTitle>Technology Stack</CardTitle>
+            <CardTitle>🔧 Technology Stack & Documentation</CardTitle>
+            <p className="text-sm text-muted-foreground">Click technologies for documentation links</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
                 <h4 className="font-semibold mb-3">Frontend</h4>
                 <div className="space-y-2">
-                  <Badge variant="outline">Next.js 15+</Badge>
-                  <Badge variant="outline">TypeScript</Badge>
-                  <Badge variant="outline">Tailwind CSS v4</Badge>
-                  <Badge variant="outline">shadcn/ui</Badge>
-                  <Badge variant="outline">Zustand</Badge>
+                  {[
+                    { name: 'Next.js 15+', url: 'https://nextjs.org/docs', file: '/src/app/' },
+                    { name: 'TypeScript', url: 'https://www.typescriptlang.org/docs/', file: '/tsconfig.json' },
+                    { name: 'Tailwind CSS v4', url: 'https://tailwindcss.com/docs', file: '/src/app/globals.css' },
+                    { name: 'shadcn/ui', url: 'https://ui.shadcn.com/', file: '/src/components/ui/' },
+                    { name: 'Zustand', url: 'https://docs.pmnd.rs/zustand/', file: '/src/store/dilemma-store.ts' }
+                  ].map((tech, i) => (
+                    <Badge 
+                      key={i}
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-blue-50 transition-colors mr-2"
+                      onClick={() => window.open(tech.url, '_blank')}
+                      title={`Documentation: ${tech.url} | Implementation: ${tech.file}`}
+                    >
+                      {tech.name} ↗
+                    </Badge>
+                  ))}
                 </div>
               </div>
               <div>
                 <h4 className="font-semibold mb-3">Backend</h4>
                 <div className="space-y-2">
-                  <Badge variant="outline">Next.js API Routes</Badge>
-                  <Badge variant="outline">PostgreSQL</Badge>
-                  <Badge variant="outline">Drizzle ORM</Badge>
-                  <Badge variant="outline">NextAuth.js</Badge>
-                  <Badge variant="outline">bcrypt</Badge>
+                  {[
+                    { name: 'Next.js API Routes', url: 'https://nextjs.org/docs/api-routes/introduction', file: '/src/app/api/' },
+                    { name: 'PostgreSQL', url: 'https://www.postgresql.org/docs/', file: 'DATABASE_URL env' },
+                    { name: 'Drizzle ORM', url: 'https://orm.drizzle.team/docs/', file: '/src/lib/schema.ts' },
+                    { name: 'NextAuth.js', url: 'https://next-auth.js.org/getting-started/introduction', file: '/src/lib/auth.ts' },
+                    { name: 'bcrypt', url: 'https://www.npmjs.com/package/bcrypt', file: 'password hashing' }
+                  ].map((tech, i) => (
+                    <Badge 
+                      key={i}
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-green-50 transition-colors mr-2"
+                      onClick={() => window.open(tech.url, '_blank')}
+                      title={`Documentation: ${tech.url} | Implementation: ${tech.file}`}
+                    >
+                      {tech.name} ↗
+                    </Badge>
+                  ))}
                 </div>
               </div>
               <div>
                 <h4 className="font-semibold mb-3">AI & Analysis</h4>
                 <div className="space-y-2">
-                  <Badge variant="outline">OpenRouter API</Badge>
-                  <Badge variant="outline">Claude 3.5 Sonnet</Badge>
-                  <Badge variant="outline">Statistical Engine</Badge>
-                  <Badge variant="outline">Template System</Badge>
-                  <Badge variant="outline">Pattern Recognition</Badge>
+                  {[
+                    { name: 'OpenRouter API', url: 'https://openrouter.ai/docs', file: '/src/lib/openrouter.ts' },
+                    { name: 'Claude 3.5 Sonnet', url: 'https://docs.anthropic.com/claude/', file: 'AI model' },
+                    { name: 'Statistical Engine', url: '#', file: '/src/lib/dilemma-generator.ts' },
+                    { name: 'Template System', url: '#', file: 'combinatorial generation' },
+                    { name: 'Pattern Recognition', url: '#', file: 'motif analysis' }
+                  ].map((tech, i) => (
+                    <Badge 
+                      key={i}
+                      variant="outline" 
+                      className={`cursor-pointer hover:bg-purple-50 transition-colors mr-2 ${tech.url === '#' ? 'cursor-default' : ''}`}
+                      onClick={() => tech.url !== '#' && window.open(tech.url, '_blank')}
+                      title={tech.url === '#' ? `Internal implementation: ${tech.file}` : `Documentation: ${tech.url} | Implementation: ${tech.file}`}
+                    >
+                      {tech.name} {tech.url !== '#' && '↗'}
+                    </Badge>
+                  ))}
                 </div>
               </div>
               <div>
                 <h4 className="font-semibold mb-3">Infrastructure</h4>
                 <div className="space-y-2">
-                  <Badge variant="outline">Neon Cloud DB</Badge>
-                  <Badge variant="outline">Vercel/Cloudflare</Badge>
-                  <Badge variant="outline">Environment Config</Badge>
-                  <Badge variant="outline">HTTPS/Security</Badge>
-                  <Badge variant="outline">Monitoring</Badge>
+                  {[
+                    { name: 'Neon Cloud DB', url: 'https://neon.tech/docs', file: 'managed PostgreSQL' },
+                    { name: 'Vercel Deployment', url: 'https://vercel.com/docs', file: 'hosting platform' },
+                    { name: 'Environment Config', url: '#', file: '/.env.example' },
+                    { name: 'HTTPS/Security', url: '#', file: 'headers & auth' },
+                    { name: 'System Monitoring', url: '/health', file: 'health dashboard' }
+                  ].map((tech, i) => (
+                    <Badge 
+                      key={i}
+                      variant="outline" 
+                      className={`cursor-pointer hover:bg-orange-50 transition-colors mr-2 ${tech.url === '#' ? 'cursor-default' : ''}`}
+                      onClick={() => {
+                        if (tech.url === '/health') {
+                          window.location.href = tech.url;
+                        } else if (tech.url !== '#') {
+                          window.open(tech.url, '_blank');
+                        }
+                      }}
+                      title={tech.url === '#' ? `Internal: ${tech.file}` : `Documentation: ${tech.url} | Info: ${tech.file}`}
+                    >
+                      {tech.name} {tech.url !== '#' && tech.url !== '/health' && '↗'}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </div>

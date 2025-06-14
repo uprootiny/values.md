@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Activity, TestTube, Map, ExternalLink } from 'lucide-react';
 
 interface GeneratedDilemma {
   title: string;
@@ -204,6 +206,51 @@ export default function AdminPage() {
           </CardHeader>
           
           <CardContent className="space-y-8">
+            {/* Technical Dashboards Section */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">System Monitoring</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link href="/health">
+                  <Card className="cursor-pointer hover:bg-accent transition-colors">
+                    <CardContent className="flex items-center space-x-3 p-4">
+                      <Activity className="h-5 w-5 text-green-500" />
+                      <div>
+                        <p className="font-medium">Health Dashboard</p>
+                        <p className="text-sm text-muted-foreground">System status & components</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </CardContent>
+                  </Card>
+                </Link>
+                
+                <Link href="/test-results">
+                  <Card className="cursor-pointer hover:bg-accent transition-colors">
+                    <CardContent className="flex items-center space-x-3 p-4">
+                      <TestTube className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="font-medium">Test Results</p>
+                        <p className="text-sm text-muted-foreground">Validation & testing suite</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </CardContent>
+                  </Card>
+                </Link>
+                
+                <Link href="/project-map">
+                  <Card className="cursor-pointer hover:bg-accent transition-colors">
+                    <CardContent className="flex items-center space-x-3 p-4">
+                      <Map className="h-5 w-5 text-purple-500" />
+                      <div>
+                        <p className="font-medium">Project Map</p>
+                        <p className="text-sm text-muted-foreground">Architecture & dataflow</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+            </div>
+
             {/* Password Change Section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold">Change Admin Password</h2>
