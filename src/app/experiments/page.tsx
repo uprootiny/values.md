@@ -382,10 +382,10 @@ export default function ExperimentsPage() {
             </p>
             <div className="space-x-4">
               <Button asChild>
-                <a href="/explore">Participate in Study</a>
+                <a href="/api/dilemmas/random">Participate in Study</a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://github.com/uprootiny/values.md" target="_blank">
+                <a href="https://github.com/GeorgeStrakhov/values.md" target="_blank">
                   Contribute Code
                 </a>
               </Button>

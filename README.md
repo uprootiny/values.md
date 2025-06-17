@@ -1,120 +1,32 @@
-# VALUES.MD
+# Values.md
 
-A structured format for ethical frameworks with parsing, validation, and integration tooling.
+We are building a research project website where users can explore their own values and generate their "values.md" markdown file - the is intended to later instruct LLMs to make choices aligned with the user's values.
 
-## Overview
+The user journey is as follows:
 
-VALUES.MD is a standardized Markdown format for defining a set of ethical preferences with a semiformal hierarchical structure. The repository provides a reference implementation, parsing utilities, validation tools, and integration examples for several common llm wrapper tools.
+1. landing: understand what's going on. 
+2. click a button to explore their values nd create their values.md
+3. random 12 dilemmas (sufficiently different ones across params) are taken from the database
+4. user answers dilemmas (chooses one of 4 options optionally adds reasoning). all choices are kept in local storage. for privacy reasons.
+5. based on the users answers we programmatically generate their values.md file v1 and we show to them instructions on how to use it
+6. we also show to them how their answers stack up against the "default" answers by the most popular leading LLMs of today
+7. we ask the user permissions to add their choices to the database anonymously. if they agree - we ask for some socio-demographic information and add to the database of answers.
+8. user can choose to do another round and keep growing / editing their values.md
+9. researchers at any point can download the list of dilemmas and user answers and LLM answers for analysis
 
-## Core Components
 
-- **Parser**: Converts VALUES.MD files into structured JSON objects
-- **Validator**: Ensures compliance with the VALUES.MD specification
-- **Evaluator**: Applies ethical frameworks to decisions and actions
-- **Generator**: Creates VALUES.MD files from structured data
-- **Visualization Components**: React-based displays of ethical frameworks
+- /admin (password auth protected)=> admin panel where we can generate more pre-generated dilemmas, see stats, tune params etc.
 
-## Technical Specification
 
-The format enforces a strict hierarchy:
+TODO:
 
-```
-VALUES.MD
-├── Core Values (prioritized)
-├── Guiding Principles (organized by value)
-├── Decision Heuristics (practical guidelines)
-├── Domain Frameworks (context-specific applications)
-├── Ethical Algorithms (implementable procedures)
-└── Response Templates (standardized explanations)
-```
-
-## Implementation
-
-The repository provides:
-
-```javascript
-// Parse a VALUES.MD file
-import { parseValuesMD } from 'values-md';
-const valuesMD = parseValuesMD(fileContent);
-
-// Validate structure
-const validation = validateValuesMD(valuesMD);
-if (!validation.valid) console.error(validation.errors);
-
-// Evaluate decisions
-const ethicsSystem = new ValuesMDSystem(valuesMD);
-const evaluation = ethicsSystem.evaluateDecision({
-  type: 'content_moderation',
-  content: 'User submitted content',
-  context: { domain: 'social_media' }
-});
-
-// Generate VALUES.MD
-const generatedMD = generateValuesMD({
-  title: 'Content Moderation Ethics',
-  coreValues: [
-    { name: 'Safety', description: 'Protect users from harm', priority: 1 },
-    { name: 'Freedom', description: 'Allow diverse expression', priority: 2 }
-  ],
-  guidingPrinciples: { /* ... */ }
-});
-```
-
-## Integration Use Cases
-
-The library is designed for:
-
-1. **AI Systems**: Provide explicit ethical frameworks for LLMs and other AI
-2. **Decision Support**: Structure ethical reasoning in human-in-the-loop systems
-3. **Auditing**: Document and version-control ethical frameworks
-4. **Cross-Domain Integration**: Bridge philosophical ethics and technical implementation
-
-## Repository Structure
-
-```
-/
-├── lib/                      # Core implementation
-│   ├── values-md.js          # Main library
-│   ├── parser.js             # VALUES.MD parser
-│   └── evaluator.js          # Decision evaluation tools
-├── templates/                # Starter templates
-├── examples/                 # Implementations by domain
-├── demos/                    # Interactive demonstrations
-├── paramsets/                # Default parameter configurations
-└── docs/                     # Technical documentation
-```
-
-## Programmatic Usage
-
-```javascript
-// Basic parsing example
-import { parseValuesMD, ValuesMDSystem } from 'values-md';
-
-// Load VALUES.MD from file or string
-const valuesMD = parseValuesMD(fs.readFileSync('values.md', 'utf8'));
-
-// Create a system for evaluation
-const ethicsSystem = new ValuesMDSystem(valuesMD);
-
-// Evaluate a decision against the framework
-const decision = {
-  type: 'feature_implementation',
-  description: 'Add user tracking functionality',
-  benefits: ['improved analytics', 'personalized experience'],
-  risks: ['privacy concerns', 'data security']
-};
-const context = { domain: 'product_development' };
-const evaluation = ethicsSystem.evaluateDecision(decision, context);
-
-console.log(`Decision aligns with values: ${evaluation.passesThresholds}`);
-console.log(`Value scores: ${JSON.stringify(evaluation.valueScores)}`);
-console.log(`Explanation: ${evaluation.explanation}`);
-```
-
-## Performance Considerations
-
-- Memory footprint: approximately 2-10KB for typical VALUES.MD objects
-
-## License
-
-MIT
+[ ] connect to the DB (remote postgres on neon)
+[ ] create openrouter service for LLMs
+[ ] create the /admin interface, password protect
+[ ] create a simple "generate a dilemma" button in the admin interface that uses openrouter to generate a dilemma
+[ ] create the ontology of the dilemmas, answers, motifs, metadata
+[ ] design DB schema
+[ ] populate the DB with key ingredients into a dilemma: ethical frameworks, motif, context (more details on this to follow)
+[ ] create a dilemma generator that takes ingredients, generates dilemmas and add them to the DB
+[ ] populate the DB with 100 dilemmas, making sure they are diverse
+[ ] create the user interface steps

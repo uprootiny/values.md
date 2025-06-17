@@ -1,0 +1,319 @@
+---
+title: 'Technical Implementation: Building the Values.md Experiment Infrastructure'
+publishedAt: '2025-06-14'
+summary: 'Deep dive into our experimental infrastructure: automated LLM testing, statistical analysis pipelines, and replicable research protocols for studying human-AI value alignment.'
+---
+
+# Technical Infrastructure for Values.md Research
+
+## System Architecture Overview
+
+Our research platform implements three core generation workflows optimized for experimental rigor and replicability:
+
+### 1. Combinatorial Dilemma Generation
+**Purpose**: Consistent, controlled ethical scenarios for baseline measurements
+
+```typescript
+interface DilemmaTemplate {
+  domain: string;
+  scenarioTemplate: string;
+  variables: VariableSet[];
+  choiceTemplates: MotifChoice[];
+  metadata: ExperimentalMetadata;
+}
+```
+
+**Advantages for Research**:
+- Eliminates LLM variability in scenario creation
+- Ensures consistent difficulty and domain coverage
+- Enables precise A/B testing across conditions
+- ~50ms generation time for real-time experiments
+
+### 2. AI-Guided Generation
+**Purpose**: Novel scenarios that test framework generalization
+
+**Enhanced Prompting Strategy**:
+```
+System Context: Ethical framework taxonomy + existing dilemma set
+User Request: Generate novel scenario avoiding overlap
+Validation: Structural consistency + motif mapping + duplication check
+```
+
+**Research Benefits**:
+- Creates scenarios outside template constraints
+- Tests value framework transfer to novel situations
+- Provides rich, contextually appropriate dilemmas
+- Database integration prevents experimental contamination
+
+### 3. Statistical Analysis & Profile Generation
+**Purpose**: Convert response patterns into testable AI instructions
+
+#### Motif Frequency Analysis
+```typescript
+interface MotifAnalysis {
+  motifId: string;
+  frequency: number;
+  weightedScore: number;  // difficulty * consistency
+  conflictsWith: string[];
+  synergiesWith: string[];
+  domainVariance: Record<string, number>;
+}
+```
+
+#### Framework Alignment Mapping
+- **Consequentialist Indicators**: UTIL_CALC, HARM_MINIMIZE, OUTCOME_FOCUS
+- **Deontological Markers**: DUTY_CARE, RULE_ABSOLUTE, RIGHTS_RESPECT  
+- **Virtue Ethics Patterns**: CHARACTER_FOCUS, VIRTUE_EXEMPLAR, WISDOM_SEEK
+- **Care Ethics Signals**: RELATIONSHIP_PRESERVE, EMPATHY_PRIORITY, CONTEXT_SENSITIVE
+
+## Experimental Control Systems
+
+### Automated Model Orchestration
+
+```typescript
+interface ExperimentConfig {
+  participantId: string;
+  valuesProfile: ValuesMarkdown;
+  testScenarios: Scenario[];
+  modelConfigs: ModelConfig[];
+  controlConditions: boolean[];
+}
+
+async function runExperiment(config: ExperimentConfig) {
+  const results = [];
+  
+  for (const scenario of config.testScenarios) {
+    for (const model of config.modelConfigs) {
+      // Control condition (no values.md)
+      const controlResponse = await model.query({
+        prompt: scenario.prompt,
+        context: scenario.baseContext
+      });
+      
+      // Treatment condition (with values.md)
+      const treatmentResponse = await model.query({
+        prompt: scenario.prompt,
+        context: scenario.baseContext + "\n" + config.valuesProfile
+      });
+      
+      results.push({
+        scenario: scenario.id,
+        model: model.name,
+        control: controlResponse,
+        treatment: treatmentResponse,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+  
+  return results;
+}
+```
+
+### Response Validation Pipeline
+
+#### Structural Validation
+```typescript
+interface ValidationResults {
+  hasDecision: boolean;
+  providesReasoning: boolean;
+  referencesValues: boolean;
+  consistencyScore: number;
+  frameworkAdherence: number;
+}
+```
+
+#### Quality Metrics
+- **Coherence Score**: Logical consistency of reasoning
+- **Relevance Rating**: Appropriateness to scenario context  
+- **Framework Fidelity**: Alignment with stated values
+- **Decision Confidence**: Clarity and conviction of choice
+
+## Database Schema for Experimental Data
+
+### Participant Data Structure
+```sql
+-- Participant responses (anonymous)
+CREATE TABLE experiment_responses (
+  response_id UUID PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  dilemma_id UUID REFERENCES dilemmas(dilemma_id),
+  chosen_option CHAR(1) CHECK (chosen_option IN ('a','b','c','d')),
+  reasoning TEXT,
+  response_time_ms INTEGER,
+  perceived_difficulty INTEGER CHECK (perceived_difficulty BETWEEN 1 AND 10),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Generated values profiles
+CREATE TABLE values_profiles (
+  profile_id UUID PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  values_markdown TEXT NOT NULL,
+  motif_frequencies JSONB,
+  framework_alignment JSONB,
+  consistency_score DECIMAL(3,2),
+  generated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Experimental Results Schema
+```sql
+-- AI model test results
+CREATE TABLE ai_experiment_results (
+  result_id UUID PRIMARY KEY,
+  participant_session_id TEXT NOT NULL,
+  model_name TEXT NOT NULL,
+  scenario_id TEXT NOT NULL,
+  condition ENUM('control', 'treatment'),
+  ai_response TEXT NOT NULL,
+  decision_extracted TEXT,
+  reasoning_extracted TEXT,
+  response_time_ms INTEGER,
+  validation_scores JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Comparative analysis outcomes
+CREATE TABLE alignment_assessments (
+  assessment_id UUID PRIMARY KEY,
+  participant_session_id TEXT NOT NULL,
+  model_name TEXT NOT NULL,
+  scenario_id TEXT NOT NULL,
+  human_preference ENUM('control', 'treatment', 'no_preference'),
+  alignment_score DECIMAL(3,2),
+  satisfaction_rating INTEGER CHECK (satisfaction_rating BETWEEN 1 AND 10),
+  assessor_notes TEXT,
+  assessed_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## Statistical Analysis Implementation
+
+### Alignment Score Calculation
+```python
+def calculate_alignment_score(human_profile, ai_responses):
+    """
+    Compute alignment between human values and AI decision patterns
+    """
+    scores = []
+    
+    for scenario, ai_response in ai_responses.items():
+        # Extract AI decision and reasoning
+        ai_decision = extract_decision(ai_response)
+        ai_reasoning = extract_reasoning(ai_response)
+        
+        # Predict human choice based on values profile
+        predicted_human = predict_human_choice(scenario, human_profile)
+        
+        # Calculate alignment components
+        decision_match = (ai_decision == predicted_human.choice)
+        framework_consistency = measure_framework_consistency(
+            ai_reasoning, human_profile.frameworks
+        )
+        motif_alignment = measure_motif_alignment(
+            ai_reasoning, human_profile.motifs
+        )
+        
+        scenario_score = weighted_average([
+            (decision_match, 0.4),
+            (framework_consistency, 0.35),
+            (motif_alignment, 0.25)
+        ])
+        
+        scores.append(scenario_score)
+    
+    return {
+        'overall_alignment': np.mean(scores),
+        'consistency': 1 - np.std(scores),
+        'scenario_scores': scores
+    }
+```
+
+### Multi-Model Comparison Framework
+```python
+def compare_models_across_participants(experiment_data):
+    """
+    Statistical analysis across models and participants
+    """
+    results = {}
+    
+    for model in MODELS:
+        model_results = []
+        
+        for participant in experiment_data:
+            control_scores = participant[model]['control']
+            treatment_scores = participant[model]['treatment']
+            
+            # Paired t-test for within-participant comparison
+            stat, p_value = scipy.stats.ttest_rel(
+                treatment_scores, control_scores
+            )
+            
+            effect_size = cohen_d(treatment_scores, control_scores)
+            
+            model_results.append({
+                'participant_id': participant['id'],
+                'improvement': np.mean(treatment_scores) - np.mean(control_scores),
+                'p_value': p_value,
+                'effect_size': effect_size
+            })
+        
+        results[model] = {
+            'mean_improvement': np.mean([r['improvement'] for r in model_results]),
+            'significant_participants': len([r for r in model_results if r['p_value'] < 0.05]),
+            'average_effect_size': np.mean([r['effect_size'] for r in model_results])
+        }
+    
+    return results
+```
+
+## Experimental Monitoring Dashboard
+
+### Real-Time Progress Tracking
+- **Participant Completion Rates**: Progress through dilemma sequence
+- **Response Quality Metrics**: Reasoning depth, response time distributions
+- **AI Model Performance**: Success rates, error handling, response consistency
+- **Statistical Power Updates**: Running power analysis as data accumulates
+
+### Data Quality Assurance
+- **Response Validation**: Automated checks for incomplete or inconsistent data
+- **Bias Detection**: Demographic and temporal pattern analysis  
+- **Outlier Identification**: Statistical anomaly detection in response patterns
+- **Model Health Monitoring**: API response rates, error classification
+
+## Replication Package
+
+### Complete Experimental Archive
+```
+/replication-package/
+├── data/
+│   ├── dilemma-templates/      # All scenario templates
+│   ├── model-configs/          # API configurations
+│   └── validation-criteria/    # Quality assessment rubrics
+├── code/
+│   ├── generation/            # Dilemma creation algorithms  
+│   ├── analysis/              # Statistical analysis scripts
+│   ├── orchestration/         # Experiment runner
+│   └── validation/            # Result verification
+├── results/
+│   ├── raw-data/             # Anonymized response data
+│   ├── processed/            # Analysis-ready datasets
+│   └── figures/              # Visualization outputs
+└── documentation/
+    ├── protocol.md           # Detailed methodology
+    ├── codebook.md          # Variable definitions
+    └── analysis-plan.md     # Pre-registered analysis
+```
+
+### Reproducibility Standards
+- **Environment Containerization**: Docker images with exact dependency versions
+- **Deterministic Execution**: Seeded randomization for all stochastic processes
+- **Version Control**: Git tags for all major experimental milestones
+- **Audit Trails**: Complete logging of all system interactions and decisions
+
+---
+
+This technical infrastructure enables rigorous, scalable research into human-AI value alignment while maintaining the highest standards of experimental control and replicability.
+
+*Interested in the technical details? Explore our [open-source implementation](https://github.com/GeorgeStrakhov/values.md) or check out our [project architecture](/project-map).*
