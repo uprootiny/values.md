@@ -149,6 +149,12 @@ export const useDilemmaStore = create<DilemmaState>()(
         const state = get();
         const currentDilemma = state.getCurrentDilemma();
         
+        console.log('saveCurrentResponse called', {
+          dilemma: currentDilemma?.title,
+          selectedOption: state.selectedOption,
+          currentResponses: state.responses.length
+        });
+        
         if (currentDilemma && state.selectedOption) {
           const responseTime = Date.now() - state.startTime;
           const newResponse: Response = {
@@ -159,17 +165,24 @@ export const useDilemmaStore = create<DilemmaState>()(
             perceivedDifficulty: state.perceivedDifficulty,
           };
           
+          console.log('Creating new response:', newResponse);
+          
           // Update or add response
           const responses = [...state.responses];
           const existingIndex = responses.findIndex(r => r.dilemmaId === currentDilemma.dilemmaId);
           
           if (existingIndex !== -1) {
             responses[existingIndex] = newResponse;
+            console.log('Updated existing response at index', existingIndex);
           } else {
             responses.push(newResponse);
+            console.log('Added new response, total responses:', responses.length);
           }
           
           set({ responses });
+          console.log('Responses saved to store:', responses.length);
+        } else {
+          console.log('Not saving response - missing dilemma or selectedOption');
         }
       },
       

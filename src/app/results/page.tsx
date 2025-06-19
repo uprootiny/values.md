@@ -34,18 +34,34 @@ export default function ResultsPage() {
 
   const generateValues = async () => {
     try {
+      // Debug: Check all localStorage keys
+      console.log('All localStorage keys:', Object.keys(localStorage));
+      console.log('localStorage contents:');
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          console.log(`${key}:`, localStorage.getItem(key));
+        }
+      }
+      
       // Get data from Zustand store's localStorage key
       const stored = localStorage.getItem('dilemma-session');
+      console.log('dilemma-session stored data:', stored);
+      
       if (!stored) {
         setError('No responses found. Please complete the dilemmas first.');
         setLoading(false);
         return;
       }
 
-      const { responses, sessionId } = JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      console.log('Parsed data:', parsed);
+      const { responses, sessionId } = parsed;
+      console.log('Extracted responses:', responses);
+      console.log('Extracted sessionId:', sessionId);
       
       if (!responses || responses.length === 0) {
-        setError('No responses found. Please complete the dilemmas first.');
+        setError(`No responses found. Found ${responses?.length || 0} responses. Please complete the dilemmas first.`);
         setLoading(false);
         return;
       }
