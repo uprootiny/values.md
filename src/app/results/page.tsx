@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useDilemmaStore } from '@/store/dilemma-store';
 
 interface ValuesResult {
   valuesMarkdown: string;
@@ -27,6 +28,9 @@ export default function ResultsPage() {
   const [results, setResults] = useState<ValuesResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  
+  // Also get data directly from Zustand store
+  const { responses, sessionId } = useDilemmaStore();
 
   useEffect(() => {
     generateValues();
@@ -44,24 +48,36 @@ export default function ResultsPage() {
         }
       }
       
+      // Debug: Check Zustand store directly
+      console.log('Zustand store responses:', responses);
+      console.log('Zustand store sessionId:', sessionId);
+      console.log('Zustand responses length:', responses?.length);
+      
       // Get data from Zustand store's localStorage key
       const stored = localStorage.getItem('dilemma-session');
       console.log('dilemma-session stored data:', stored);
       
-      if (!stored) {
-        setError('No responses found. Please complete the dilemmas first.');
-        setLoading(false);
-        return;
-      }
-
-      const parsed = JSON.parse(stored);
-      console.log('Parsed data:', parsed);
-      const { responses, sessionId } = parsed;
-      console.log('Extracted responses:', responses);
-      console.log('Extracted sessionId:', sessionId);
+      // Try Zustand store first, fallback to localStorage
+      let finalResponses = responses;
+      let finalSessionId = sessionId;
       
-      if (!responses || responses.length === 0) {
-        setError(`No responses found. Found ${responses?.length || 0} responses. Please complete the dilemmas first.`);
+      if (!finalResponses || finalResponses.length === 0) {
+        if (!stored) {
+          setError('No responses found. Please complete the dilemmas first.');
+          setLoading(false);
+          return;
+        }
+
+        const parsed = JSON.parse(stored);
+        console.log('Parsed data:', parsed);
+        finalResponses = parsed.responses;
+        finalSessionId = parsed.sessionId;
+        console.log('Extracted responses:', finalResponses);
+        console.log('Extracted sessionId:', finalSessionId);
+      }
+      
+      if (!finalResponses || finalResponses.length === 0) {
+        setError(`No responses found. Zustand: ${responses?.length || 0}, localStorage: ${finalResponses?.length || 0} responses. Please complete the dilemmas first.`);
         setLoading(false);
         return;
       }
@@ -73,7 +89,7 @@ export default function ResultsPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ sessionId, responses }),
+          body: JSON.stringify({ sessionId: finalSessionId, responses: finalResponses }),
         });
       } catch (submissionError) {
         console.warn('Response submission failed, proceeding with local data:', submissionError);
@@ -85,7 +101,7 @@ export default function ResultsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId: finalSessionId }),
       });
 
       if (!response.ok) {
@@ -133,7 +149,7 @@ export default function ResultsPage() {
         <div className="text-center space-y-4">
           <p className="text-destructive">{error}</p>
           <Button asChild variant="outline">
-            <Link href="/explore">Start Over</Link>
+            <Link href="/">Start Over</Link>
           </Button>
         </div>
       </div>
@@ -228,10 +244,10 @@ export default function ResultsPage() {
                 Download values.md
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/contribute">Contribute to Research</Link>
+                <Link href="/research">Contribute to Research</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link href="/explore">Take Another Round</Link>
+                <Link href="/">Take Another Round</Link>
               </Button>
             </div>
           </CardContent>

@@ -110,13 +110,36 @@ export async function POST(request: NextRequest) {
       statisticalAnalysis
     );
 
+    // Create detailed analysis with motif information
+    const detailedAnalysis = topMotifs.map(motifId => {
+      const motif = motifDetails.find(m => m.motifId === motifId);
+      return {
+        motifId,
+        name: motif?.name || motifId,
+        category: motif?.category || 'Unknown',
+        count: motifCounts[motifId] || 0,
+        weight: (motifCounts[motifId] || 0) / Object.values(motifCounts).reduce((sum, count) => sum + count, 0)
+      };
+    });
+
+    // Calculate domain preferences from responses
+    const domainPreferences: Record<string, number> = {};
+    responses.forEach(response => {
+      if (response.domain) {
+        domainPreferences[response.domain] = (domainPreferences[response.domain] || 0) + 1;
+      }
+    });
+
     return NextResponse.json({ 
       valuesMarkdown,
       motifAnalysis: motifCounts,
-      topMotifs,
+      detailedAnalysis,
       frameworkAlignment,
+      domainPreferences,
+      // Keep additional data for debugging
+      topMotifs,
       statisticalAnalysis,
-      responsePatterns: responsePatterns.slice(0, 5) // Return top 5 for display
+      responsePatterns: responsePatterns.slice(0, 5)
     });
   } catch (error) {
     console.error('Error generating values:', error);
