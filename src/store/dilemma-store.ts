@@ -149,10 +149,13 @@ export const useDilemmaStore = create<DilemmaState>()(
         const state = get();
         const currentDilemma = state.getCurrentDilemma();
         
-        console.log('saveCurrentResponse called', {
+        console.log('🔍 saveCurrentResponse called', {
           dilemma: currentDilemma?.title,
+          dilemmaId: currentDilemma?.dilemmaId,
           selectedOption: state.selectedOption,
-          currentResponses: state.responses.length
+          currentResponses: state.responses.length,
+          hasSelectedOption: !!state.selectedOption,
+          hasDilemma: !!currentDilemma
         });
         
         if (currentDilemma && state.selectedOption) {

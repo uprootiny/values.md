@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, use } from 'react';
+import React, { useEffect, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +35,10 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
     goToPrevious,
     restoreResponseForIndex
   } = useDilemmaStore();
+  
+  // Auto-advance timer
+  const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = React.useState<number | null>(null);
   
   const loading = dilemmas.length === 0;
   const currentDilemma = getCurrentDilemma();
@@ -80,7 +84,7 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [resolvedParams.uuid]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedOption) return;
 
     const hasNext = goToNext();
@@ -92,7 +96,16 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
         router.push(`/explore/${newDilemmaId}`, { scroll: false });
       }
     } else {
-      // All dilemmas completed, go to results
+      // All dilemmas completed, ensure final response is saved and wait for persistence
+      console.log('🎯 Final dilemma completed, ensuring persistence...');
+      
+      // Small delay to ensure Zustand persist middleware has time to save to localStorage
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verify the response was saved
+      const finalResponses = JSON.parse(localStorage.getItem('dilemma-session') || '{}').responses || [];
+      console.log('🎯 Final responses count:', finalResponses.length);
+      
       router.push('/results');
     }
   };

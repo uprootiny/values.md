@@ -26,8 +26,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Build information for deployment tracing
+  const buildInfo = {
+    buildTime: new Date().toISOString(),
+    commit: process.env.VERCEL_GIT_COMMIT_SHA?.substring(0, 7) || 'local',
+    branch: process.env.VERCEL_GIT_COMMIT_REF || 'local'
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Build information for deployment tracing */}
+        <meta name="build-commit" content={buildInfo.commit} />
+        <meta name="build-branch" content={buildInfo.branch} />
+        <meta name="build-time" content={buildInfo.buildTime} />
+        {/* Build: {buildInfo.commit} ({buildInfo.branch}) at {buildInfo.buildTime} */}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >

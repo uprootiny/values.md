@@ -39,12 +39,12 @@ export default function ResultsPage() {
   const generateValues = async () => {
     try {
       // Debug: Check all localStorage keys
-      console.log('All localStorage keys:', Object.keys(localStorage));
-      console.log('localStorage contents:');
+      console.log('🔍 All localStorage keys:', Object.keys(localStorage));
+      console.log('🔍 localStorage contents:');
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
-          console.log(`${key}:`, localStorage.getItem(key));
+          console.log(`🔍 ${key}:`, localStorage.getItem(key));
         }
       }
       
