@@ -1,5 +1,59 @@
 # Values.md
 
+A research platform for exploring personal values through ethical dilemmas to generate personalized "values.md" files for LLM alignment.
+
+## 🚀 Quick Start
+
+### One-Click Deployment
+
+```bash
+# Deploy locally with wizard
+./deploy.sh
+
+# Full project management TUI
+./manage.sh
+
+# Quick status check
+./status.sh
+```
+
+### Manual Setup
+
+```bash
+npm install
+npm run setup    # Database setup and seeding
+npm run dev      # Start development server
+```
+
+## 📋 Management Tools
+
+This project includes comprehensive management tools for easy deployment and development:
+
+- **`./deploy.sh`** - Deployment wizard with automatic port selection and firewall configuration
+- **`./manage.sh`** - Full-featured TUI for project management, branch switching, and monitoring
+- **`./status.sh`** - Quick status overview of project state
+
+### Deployment Wizard Features
+
+- ✅ Automatic port detection (3001-3010, then random high ports)
+- ✅ UFW firewall configuration (when needed)
+- ✅ System status validation
+- ✅ Dependency management
+- ✅ Process monitoring
+- ✅ Build verification
+- ✅ Log management
+
+### Project Manager TUI Features
+
+- 🌿 Branch management and switching
+- 🔧 Development tools integration
+- 📊 Real-time system monitoring
+- 📝 Log viewer with live tail
+- ⚙️ Settings and configuration
+- 🧹 Cleanup utilities
+
+## 📖 Project Overview
+
 We are building a research project website where users can explore their own values and generate their "values.md" markdown file - the is intended to later instruct LLMs to make choices aligned with the user's values.
 
 The user journey is as follows:
