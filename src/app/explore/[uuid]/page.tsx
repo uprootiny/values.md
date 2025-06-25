@@ -40,6 +40,51 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
   const autoAdvanceTimer = useRef<NodeJS.Timeout | null>(null);
   const [autoAdvanceCountdown, setAutoAdvanceCountdown] = React.useState<number | null>(null);
   
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) {
+        clearTimeout(autoAdvanceTimer.current);
+      }
+    };
+  }, []);
+  
+  // Auto-advance when option is selected
+  useEffect(() => {
+    if (selectedOption && !autoAdvanceCountdown) {
+      // Start countdown
+      let countdown = 12; // 1.2 seconds in tenths
+      setAutoAdvanceCountdown(countdown);
+      
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        setAutoAdvanceCountdown(countdown);
+        
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          setAutoAdvanceCountdown(null);
+          handleNext(); // Auto-advance
+        }
+      }, 100); // Update every 100ms for smooth countdown
+      
+      autoAdvanceTimer.current = countdownInterval;
+    } else if (!selectedOption && autoAdvanceTimer.current) {
+      // Clear timer if option is deselected
+      clearTimeout(autoAdvanceTimer.current);
+      setAutoAdvanceCountdown(null);
+      autoAdvanceTimer.current = null;
+    }
+  }, [selectedOption]);
+  
+  // Clear timer when manually navigating
+  const clearAutoAdvance = () => {
+    if (autoAdvanceTimer.current) {
+      clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    }
+    setAutoAdvanceCountdown(null);
+  };
+  
   const loading = dilemmas.length === 0;
   const currentDilemma = getCurrentDilemma();
 
@@ -86,6 +131,9 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
 
   const handleNext = async () => {
     if (!selectedOption) return;
+    
+    // Clear auto-advance timer since user clicked manually
+    clearAutoAdvance();
 
     const hasNext = goToNext();
     
@@ -112,6 +160,9 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
+      // Clear auto-advance timer
+      clearAutoAdvance();
+      
       goToPrevious();
       
       // Update URL to current dilemma without page reload
@@ -229,8 +280,20 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
               />
             </div>
 
+            {/* Auto-advance indicator */}
+            {autoAdvanceCountdown !== null && selectedOption && (
+              <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm text-primary font-medium">
+                  Auto-advancing in {(autoAdvanceCountdown / 10).toFixed(1)}s...
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click Next to advance now, or click Previous to cancel
+                </p>
+              </div>
+            )}
+
             {/* Navigation */}
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
@@ -238,12 +301,26 @@ export default function ExplorePage({ params }: { params: Promise<{ uuid: string
               >
                 Previous
               </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!selectedOption}
-              >
-                {currentIndex === dilemmas.length - 1 ? 'Finish' : 'Next'}
-              </Button>
+              
+              <div className="flex items-center gap-3">
+                {autoAdvanceCountdown !== null && (
+                  <div className="text-xs text-muted-foreground">
+                    Auto-advancing...
+                  </div>
+                )}
+                <Button
+                  onClick={handleNext}
+                  disabled={!selectedOption}
+                  className={autoAdvanceCountdown !== null ? "ring-2 ring-primary ring-opacity-50" : ""}
+                >
+                  {currentIndex === dilemmas.length - 1 ? 'Finish' : 'Next'}
+                  {autoAdvanceCountdown !== null && (
+                    <span className="ml-2 text-xs">
+                      ({(autoAdvanceCountdown / 10).toFixed(1)}s)
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
