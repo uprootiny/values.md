@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useDilemmaStore } from '@/store/dilemma-store';
 
 interface ValuesResult {
   valuesMarkdown: string;
@@ -27,6 +28,9 @@ export default function ResultsPage() {
   const [results, setResults] = useState<ValuesResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  
+  // Get responses from Zustand store
+  const { responses, sessionId } = useDilemmaStore();
 
   useEffect(() => {
     generateValues();
@@ -34,37 +38,38 @@ export default function ResultsPage() {
 
   const generateValues = async () => {
     try {
-      // Debug: Check all localStorage keys
-      console.log('All localStorage keys:', Object.keys(localStorage));
-      console.log('localStorage contents:');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          console.log(`${key}:`, localStorage.getItem(key));
+      console.log('🔍 Starting values generation...');
+      console.log('🔍 Zustand store responses:', responses?.length || 0);
+      console.log('🔍 Zustand store sessionId:', sessionId);
+      
+      // Try Zustand store first, then localStorage fallback
+      let finalResponses = responses;
+      let finalSessionId = sessionId;
+      
+      if (!finalResponses || finalResponses.length === 0) {
+        console.log('🔍 No responses in Zustand store, checking localStorage...');
+        const stored = localStorage.getItem('dilemma-session');
+        console.log('🔍 localStorage dilemma-session:', stored);
+        
+        if (!stored) {
+          setError('No responses found. Please complete the dilemmas first.');
+          setLoading(false);
+          return;
         }
-      }
-      
-      // Get data from Zustand store's localStorage key
-      const stored = localStorage.getItem('dilemma-session');
-      console.log('dilemma-session stored data:', stored);
-      
-      if (!stored) {
-        setError('No responses found. Please complete the dilemmas first.');
-        setLoading(false);
-        return;
-      }
 
-      const parsed = JSON.parse(stored);
-      console.log('Parsed data:', parsed);
-      const { responses, sessionId } = parsed;
-      console.log('Extracted responses:', responses);
-      console.log('Extracted sessionId:', sessionId);
+        const parsed = JSON.parse(stored);
+        finalResponses = parsed.responses;
+        finalSessionId = parsed.sessionId;
+        console.log('🔍 Extracted from localStorage:', finalResponses?.length || 0, 'responses');
+      }
       
-      if (!responses || responses.length === 0) {
-        setError(`No responses found. Found ${responses?.length || 0} responses. Please complete the dilemmas first.`);
+      if (!finalResponses || finalResponses.length === 0) {
+        setError(`No responses found. Zustand: ${responses?.length || 0}, localStorage: ${finalResponses?.length || 0} responses. Please complete the dilemmas first.`);
         setLoading(false);
         return;
       }
+      
+      console.log('🔍 Using responses:', finalResponses.length, 'sessionId:', finalSessionId);
 
       // First, submit responses to database if not already done
       try {
@@ -73,7 +78,7 @@ export default function ResultsPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ sessionId, responses }),
+          body: JSON.stringify({ sessionId: finalSessionId, responses: finalResponses }),
         });
       } catch (submissionError) {
         console.warn('Response submission failed, proceeding with local data:', submissionError);
@@ -85,7 +90,7 @@ export default function ResultsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId: finalSessionId }),
       });
 
       if (!response.ok) {
